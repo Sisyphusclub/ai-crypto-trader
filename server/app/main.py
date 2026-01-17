@@ -1,0 +1,39 @@
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.core.settings import settings
+from app.core.startup import verify_startup_secrets
+from app.api.health import router as health_router
+from app.api.exchanges import router as exchanges_router
+from app.api.models import router as models_router
+from app.api.tasks import router as tasks_router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan handler."""
+    verify_startup_secrets()
+    yield
+
+
+app = FastAPI(
+    title="AI Crypto Trader API",
+    version="0.1.0",
+    lifespan=lifespan,
+)
+
+# CORS middleware for frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Register routers
+app.include_router(health_router)
+app.include_router(exchanges_router, prefix="/api/v1")
+app.include_router(models_router, prefix="/api/v1")
+app.include_router(tasks_router, prefix="/api/v1")
