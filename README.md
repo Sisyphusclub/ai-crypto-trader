@@ -1,5 +1,7 @@
 # AI Crypto Trader (MVP)
 
+[中文文档](./README.zh-CN.md)
+
 A self-hosted, AI-driven crypto perpetual trading platform for personal use.
 
 ## Prerequisites
