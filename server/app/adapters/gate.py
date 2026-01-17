@@ -338,6 +338,12 @@ class GateAdapter(ExchangeAdapter):
         except httpx.HTTPStatusError:
             return []
 
+    async def get_ticker(self, symbol: str) -> dict:
+        """Get current mark price for a symbol."""
+        gate_symbol = self._convert_symbol(symbol)
+        data = await self._request("GET", f"/api/v4/futures/usdt/contracts/{gate_symbol}", signed=False)
+        return {"price": data.get("mark_price", "0")}
+
     async def get_klines(
         self,
         symbol: str,

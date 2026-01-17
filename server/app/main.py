@@ -11,6 +11,11 @@ from app.api.tasks import router as tasks_router
 from app.api.trade import router as trade_router
 from app.api.strategies import router as strategies_router
 from app.api.signals import router as signals_router
+from app.api.traders import router as traders_router
+from app.api.logs import router as logs_router
+from app.api.stream import router as stream_router
+from app.api.pnl import router as pnl_router
+from app.api.replay import router as replay_router
 
 
 @asynccontextmanager
@@ -43,3 +48,8 @@ app.include_router(tasks_router, prefix="/api/v1")
 app.include_router(trade_router, prefix="/api/v1")
 app.include_router(strategies_router, prefix="/api/v1")
 app.include_router(signals_router, prefix="/api/v1")
+app.include_router(traders_router, prefix="/api/v1")
+app.include_router(logs_router, prefix="/api/v1")
+app.include_router(stream_router, prefix="/api/v1")
+app.include_router(pnl_router, prefix="/api/v1")
+app.include_router(replay_router, prefix="/api/v1")

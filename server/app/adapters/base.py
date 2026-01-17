@@ -145,6 +145,15 @@ class ExchangeAdapter(ABC):
         """Get all open orders, optionally filtered by symbol."""
         pass
 
+    @abstractmethod
+    async def get_ticker(self, symbol: str) -> dict:
+        """Get current ticker price for a symbol.
+
+        Returns:
+            Dict with 'price' key containing current mark price
+        """
+        pass
+
     def round_price(self, price: Decimal, precision: int) -> Decimal:
         """Round price to exchange precision."""
         return Decimal(str(round(float(price), precision)))

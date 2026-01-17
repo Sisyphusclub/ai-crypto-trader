@@ -20,6 +20,38 @@ export default function Home() {
             <ul className="space-y-2">
               <li>
                 <a
+                  href="/dashboard"
+                  className="text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  Real-time Dashboard
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/traders"
+                  className="text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  AI Traders
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/logs"
+                  className="text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  Decision Logs
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/replay"
+                  className="text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  Trade Replay / Audit
+                </a>
+              </li>
+              <li>
+                <a
                   href="/strategies"
                   className="text-blue-400 hover:text-blue-300 transition-colors"
                 >

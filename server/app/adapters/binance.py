@@ -302,6 +302,13 @@ class BinanceAdapter(ExchangeAdapter):
         except httpx.HTTPStatusError:
             return []
 
+    async def get_ticker(self, symbol: str) -> dict:
+        """Get current mark price for a symbol."""
+        data = await self._request("GET", "/fapi/v1/premiumIndex", {
+            "symbol": symbol,
+        }, signed=False)
+        return {"price": data.get("markPrice", "0")}
+
     async def get_klines(
         self,
         symbol: str,

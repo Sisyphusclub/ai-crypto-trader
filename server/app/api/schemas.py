@@ -355,3 +355,122 @@ class SignalDetailResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# ============================================================
+# Trader Schemas
+# ============================================================
+
+class TraderMode(str, Enum):
+    PAPER = "paper"
+    LIVE = "live"
+
+
+class TraderCreate(BaseModel):
+    """Request schema for creating a trader."""
+    name: str = Field(..., min_length=1, max_length=100)
+    exchange_account_id: UUID
+    model_config_id: UUID
+    strategy_id: UUID
+    mode: TraderMode = TraderMode.PAPER
+    max_concurrent_positions: int = Field(3, ge=1, le=20)
+    daily_loss_cap: Optional[float] = Field(None, gt=0)
+
+
+class TraderUpdate(BaseModel):
+    """Request schema for updating a trader."""
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    enabled: Optional[bool] = None
+    mode: Optional[TraderMode] = None
+    max_concurrent_positions: Optional[int] = Field(None, ge=1, le=20)
+    daily_loss_cap: Optional[float] = Field(None, gt=0)
+
+
+class TraderResponse(BaseModel):
+    """Response schema for trader."""
+    id: UUID
+    name: str
+    exchange_account_id: UUID
+    exchange_label: Optional[str] = None
+    model_config_id: UUID
+    model_label: Optional[str] = None
+    strategy_id: UUID
+    strategy_name: Optional[str] = None
+    enabled: bool
+    mode: str
+    max_concurrent_positions: int
+    daily_loss_cap: Optional[str] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class TraderStartRequest(BaseModel):
+    """Request schema for starting a trader (live mode requires confirm)."""
+    confirm: bool = False
+
+
+# ============================================================
+# Decision Log Schemas
+# ============================================================
+
+class DecisionStatus(str, Enum):
+    PENDING = "pending"
+    ALLOWED = "allowed"
+    BLOCKED = "blocked"
+    EXECUTED = "executed"
+    FAILED = "failed"
+
+
+class DecisionLogResponse(BaseModel):
+    """Response schema for decision log."""
+    id: UUID
+    trader_id: UUID
+    trader_name: Optional[str] = None
+    signal_id: Optional[UUID] = None
+    client_order_id: str
+    status: str
+    confidence: Optional[str] = None
+    reason_summary: Optional[str] = None
+    risk_allowed: Optional[bool] = None
+    risk_reasons: Optional[List[str]] = None
+    trade_plan_id: Optional[UUID] = None
+    execution_error: Optional[str] = None
+    model_provider: Optional[str] = None
+    model_name: Optional[str] = None
+    tokens_used: Optional[int] = None
+    is_paper: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class DecisionLogDetailResponse(BaseModel):
+    """Detailed decision log response."""
+    id: UUID
+    trader_id: UUID
+    trader_name: Optional[str] = None
+    signal_id: Optional[UUID] = None
+    client_order_id: str
+    status: str
+    input_snapshot: Optional[dict] = None
+    trade_plan: Optional[dict] = None
+    confidence: Optional[str] = None
+    reason_summary: Optional[str] = None
+    evidence: Optional[dict] = None
+    risk_allowed: Optional[bool] = None
+    risk_reasons: Optional[List[str]] = None
+    normalized_plan: Optional[dict] = None
+    trade_plan_id: Optional[UUID] = None
+    execution_error: Optional[str] = None
+    model_provider: Optional[str] = None
+    model_name: Optional[str] = None
+    tokens_used: Optional[int] = None
+    is_paper: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

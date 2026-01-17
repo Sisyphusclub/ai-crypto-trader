@@ -10,6 +10,8 @@ from app.models.base import (
     Strategy,
     MarketSnapshot,
     Signal,
+    Trader,
+    DecisionLog,
     ExchangeType,
     ModelProvider,
     SecretKind,
@@ -18,6 +20,8 @@ from app.models.base import (
     ExecutionStatus,
     Timeframe,
     SignalSide,
+    TraderMode,
+    DecisionStatus,
 )
 
 __all__ = [
@@ -32,6 +36,8 @@ __all__ = [
     "Strategy",
     "MarketSnapshot",
     "Signal",
+    "Trader",
+    "DecisionLog",
     "ExchangeType",
     "ModelProvider",
     "SecretKind",
@@ -40,4 +46,6 @@ __all__ = [
     "ExecutionStatus",
     "Timeframe",
     "SignalSide",
+    "TraderMode",
+    "DecisionStatus",
 ]

@@ -65,6 +65,19 @@ class SignalSide(str, PyEnum):
     SHORT = "short"
 
 
+class TraderMode(str, PyEnum):
+    PAPER = "paper"
+    LIVE = "live"
+
+
+class DecisionStatus(str, PyEnum):
+    PENDING = "pending"
+    ALLOWED = "allowed"
+    BLOCKED = "blocked"
+    EXECUTED = "executed"
+    FAILED = "failed"
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -251,3 +264,69 @@ class Signal(Base):
 
     strategy = relationship("Strategy", back_populates="signals")
     snapshot = relationship("MarketSnapshot", back_populates="signals")
+
+
+class Trader(Base):
+    """AI Trader configuration - binds exchange + model + strategy."""
+    __tablename__ = "traders"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    name = Column(String(100), nullable=False)
+    exchange_account_id = Column(UUID(as_uuid=True), ForeignKey("exchange_accounts.id"), nullable=False)
+    model_config_id = Column(UUID(as_uuid=True), ForeignKey("model_configs.id"), nullable=False)
+    strategy_id = Column(UUID(as_uuid=True), ForeignKey("strategies.id"), nullable=False)
+    enabled = Column(Boolean, default=False, nullable=False, index=True)
+    mode = Column(String(10), default="paper", nullable=False)  # paper/live
+    max_concurrent_positions = Column(Integer, default=3, nullable=False)
+    daily_loss_cap = Column(Numeric(20, 8), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    exchange_account = relationship("ExchangeAccount")
+    model_config = relationship("ModelConfig")
+    strategy = relationship("Strategy")
+    decisions = relationship("DecisionLog", back_populates="trader")
+
+
+class DecisionLog(Base):
+    """AI decision log - stores trade plans, risk reports, execution results."""
+    __tablename__ = "decision_logs"
+    __table_args__ = (
+        UniqueConstraint("client_order_id", name="uq_decision_logs_client_order_id"),
+    )
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    trader_id = Column(UUID(as_uuid=True), ForeignKey("traders.id"), nullable=False, index=True)
+    signal_id = Column(UUID(as_uuid=True), ForeignKey("signals.id"), nullable=True, index=True)
+    client_order_id = Column(String(100), nullable=False, index=True)
+    status = Column(String(20), default="pending", nullable=False, index=True)
+
+    # AI Input (sanitized - no secrets)
+    input_snapshot = Column(JSONB, nullable=True)  # Market data summary
+
+    # AI Output (no raw CoT)
+    trade_plan = Column(JSONB, nullable=True)  # Validated plan
+    confidence = Column(Numeric(3, 2), nullable=True)
+    reason_summary = Column(Text, nullable=True)
+    evidence = Column(JSONB, nullable=True)  # Structured evidence
+
+    # Risk Report
+    risk_allowed = Column(Boolean, nullable=True)
+    risk_reasons = Column(JSONB, nullable=True)
+    normalized_plan = Column(JSONB, nullable=True)
+
+    # Execution Result
+    trade_plan_id = Column(UUID(as_uuid=True), ForeignKey("trade_plans.id"), nullable=True)
+    execution_error = Column(Text, nullable=True)
+
+    # Metadata
+    model_provider = Column(String(50), nullable=True)
+    model_name = Column(String(100), nullable=True)
+    tokens_used = Column(Integer, nullable=True)
+    is_paper = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    trader = relationship("Trader", back_populates="decisions")
+    signal = relationship("Signal")
+    execution = relationship("TradePlan", foreign_keys=[trade_plan_id])

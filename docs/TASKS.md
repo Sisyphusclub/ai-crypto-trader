@@ -33,12 +33,38 @@
 - [x] Frontend: /signals page with detail view
 - [x] Unit tests: indicators + triggers (26 tests)
 
-## Milestone 4 — AI + Risk loop
-- [ ] model router (OpenAI/Anthropic/Google)
-- [ ] strict JSON output (trade plan)
-- [ ] hard risk checks gate execution
-- [ ] decision logs with reasoning summary (no raw CoT)
+## Milestone 4 — AI + Risk loop ✅
+- [x] ModelRouter (OpenAI/Anthropic/Google) with adapters
+- [x] Strict JSON Schema validation for trade plans
+- [x] AI input/output contracts (TradePlanOutput, Evidence)
+- [x] RiskManager hard gate (leverage, notional, positions, cooldown, margin)
+- [x] Deterministic client_order_id for idempotency
+- [x] Trader table: binds exchange + model + strategy
+- [x] DecisionLog table: stores plans, risk reports, execution results
+- [x] Worker task: run_trader_cycle with full execution loop
+- [x] Traders API: CRUD + start/stop endpoints
+- [x] Logs API: decisions/executions listing with filters
+- [x] Frontend: /traders page (list/create/start/stop)
+- [x] Frontend: /logs page with stats and filters
+- [x] Decision logs sanitized (no raw CoT, only reason_summary + evidence)
+- [x] Unit tests: contracts validation, risk manager (22 tests)
 
-## Milestone 5 — Dashboard
-- [ ] realtime positions/PnL/orders via SSE/WS
-- [ ] filterable decision/execution logs
+## Milestone 5 — Real-time Dashboard ✅
+- [x] SSE real-time data channel (/api/v1/stream)
+- [x] Redis cache for positions/orders/PnL snapshots
+- [x] Event format: { type, ts, data } with reconnection support
+- [x] Dashboard page: positions/orders/signals/decisions/executions
+- [x] Replay/Audit view: complete trade chain visualization
+- [x] JSON export for decision and trade replay
+- [x] PnL API: summary/timeseries/today endpoints
+- [x] PnL worker task for background calculation
+- [x] Sanitized outputs (no secrets, no raw CoT)
+- [x] Frontend SSE hook with auto-reconnect
+- [x] Unit tests: dashboard APIs, chain builder, event format
+
+## Milestone 6 — Production Hardening
+- [ ] Authentication layer (JWT/API keys)
+- [ ] Rate limiting on APIs
+- [ ] WebSocket upgrade for lower latency
+- [ ] Alerting on execution failures
+- [ ] Comprehensive integration tests

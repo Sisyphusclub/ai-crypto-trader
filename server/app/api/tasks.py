@@ -1,6 +1,7 @@
 """Task queue API endpoints."""
 import uuid
-from fastapi import APIRouter, HTTPException
+from typing import Optional
+from fastapi import APIRouter, HTTPException, Query
 from rq import Queue
 from rq.job import Job
 import redis
@@ -47,6 +48,21 @@ def enqueue_all_strategies_evaluation():
     """
     queue = _get_queue()
     job = queue.enqueue("worker.tasks.strategy.evaluate_all_strategies")
+    return TaskEnqueueResponse(task_id=job.id, status="queued")
+
+
+@router.post("/calculate-pnl", response_model=TaskEnqueueResponse)
+def enqueue_pnl_calculation(exchange_account_id: uuid.UUID = None):
+    """
+    Enqueue PnL calculation for exchange accounts.
+    If exchange_account_id is provided, calculates for that account only.
+    Otherwise calculates for all active accounts.
+    """
+    queue = _get_queue()
+    if exchange_account_id:
+        job = queue.enqueue("worker.tasks.pnl.calculate_realized_pnl", str(exchange_account_id))
+    else:
+        job = queue.enqueue("worker.tasks.pnl.calculate_all_pnl")
     return TaskEnqueueResponse(task_id=job.id, status="queued")
 
 
