@@ -1,6 +1,7 @@
 """AI Trader worker tasks."""
 import asyncio
 import uuid
+import time
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Optional, List, Dict, Any
@@ -10,6 +11,15 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.settings import settings
 from app.core.crypto import decrypt_secret
+from app.core.locks import trader_lock, LockNotAcquiredError
+from app.core.logging import get_logger, trader_id_var, symbol_var
+from app.core.metrics import (
+    worker_jobs_total,
+    worker_job_duration_seconds,
+    model_calls_total,
+    executions_total,
+    risk_checks_total,
+)
 from app.models import (
     Trader,
     DecisionLog,
@@ -29,6 +39,8 @@ from app.ai.risk_manager import (
     AccountState,
     generate_client_order_id,
 )
+
+logger = get_logger(__name__)
 
 
 def _get_db_session() -> Session:
@@ -430,11 +442,36 @@ def run_trader_cycle(trader_id: str) -> Optional[str]:
     Returns:
         Comma-separated decision IDs if any created, None otherwise
     """
-    db = _get_db_session()
+    start_time = time.time()
+    trader_id_var.set(trader_id)
+
     try:
-        return asyncio.run(_run_trader_cycle_async(trader_id, db))
+        with trader_lock(trader_id):
+            db = _get_db_session()
+            try:
+                result = asyncio.run(_run_trader_cycle_async(trader_id, db))
+                worker_jobs_total.labels(task="trader_cycle", status="success").inc()
+                return result
+            finally:
+                db.close()
+    except LockNotAcquiredError:
+        logger.warning(f"Skipping trader cycle - lock not acquired", extra={
+            "trader_id": trader_id,
+            "event": "lock_contention"
+        })
+        worker_jobs_total.labels(task="trader_cycle", status="skipped").inc()
+        return None
+    except Exception as e:
+        logger.error(f"Trader cycle failed: {e}", extra={
+            "trader_id": trader_id,
+            "event": "cycle_error"
+        })
+        worker_jobs_total.labels(task="trader_cycle", status="failed").inc()
+        raise
     finally:
-        db.close()
+        duration = time.time() - start_time
+        worker_job_duration_seconds.labels(task="trader_cycle").observe(duration)
+        trader_id_var.set(None)
 
 
 def run_all_traders() -> dict:
@@ -443,14 +480,30 @@ def run_all_traders() -> dict:
     Returns:
         Dict with trader_id -> decision_ids mapping
     """
+    start_time = time.time()
     db = _get_db_session()
     try:
         traders = db.query(Trader).filter(Trader.enabled == True).all()
         results = {}
         for trader in traders:
-            decision_ids = asyncio.run(_run_trader_cycle_async(str(trader.id), db))
-            if decision_ids:
-                results[str(trader.id)] = decision_ids
+            try:
+                with trader_lock(str(trader.id)):
+                    decision_ids = asyncio.run(_run_trader_cycle_async(str(trader.id), db))
+                    if decision_ids:
+                        results[str(trader.id)] = decision_ids
+            except LockNotAcquiredError:
+                logger.warning(f"Skipping trader - lock not acquired", extra={
+                    "trader_id": str(trader.id),
+                    "event": "lock_contention"
+                })
+                continue
+        worker_jobs_total.labels(task="run_all_traders", status="success").inc()
         return results
+    except Exception as e:
+        logger.error(f"Run all traders failed: {e}")
+        worker_jobs_total.labels(task="run_all_traders", status="failed").inc()
+        raise
     finally:
+        duration = time.time() - start_time
+        worker_job_duration_seconds.labels(task="run_all_traders").observe(duration)
         db.close()

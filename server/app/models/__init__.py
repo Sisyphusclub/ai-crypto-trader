@@ -12,6 +12,7 @@ from app.models.base import (
     Signal,
     Trader,
     DecisionLog,
+    Alert,
     ExchangeType,
     ModelProvider,
     SecretKind,
@@ -22,6 +23,8 @@ from app.models.base import (
     SignalSide,
     TraderMode,
     DecisionStatus,
+    AlertSeverity,
+    AlertCategory,
 )
 
 __all__ = [
@@ -38,6 +41,7 @@ __all__ = [
     "Signal",
     "Trader",
     "DecisionLog",
+    "Alert",
     "ExchangeType",
     "ModelProvider",
     "SecretKind",
@@ -48,4 +52,6 @@ __all__ = [
     "SignalSide",
     "TraderMode",
     "DecisionStatus",
+    "AlertSeverity",
+    "AlertCategory",
 ]

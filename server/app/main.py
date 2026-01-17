@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.settings import settings
 from app.core.startup import verify_startup_secrets
+from app.core.logging import setup_logging
 from app.api.health import router as health_router
 from app.api.exchanges import router as exchanges_router
 from app.api.models import router as models_router
@@ -16,11 +17,14 @@ from app.api.logs import router as logs_router
 from app.api.stream import router as stream_router
 from app.api.pnl import router as pnl_router
 from app.api.replay import router as replay_router
+from app.api.alerts import router as alerts_router
+from app.api.admin import router as admin_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan handler."""
+    setup_logging()
     verify_startup_secrets()
     yield
 
@@ -53,3 +57,5 @@ app.include_router(logs_router, prefix="/api/v1")
 app.include_router(stream_router, prefix="/api/v1")
 app.include_router(pnl_router, prefix="/api/v1")
 app.include_router(replay_router, prefix="/api/v1")
+app.include_router(alerts_router, prefix="/api/v1")
+app.include_router(admin_router, prefix="/api/v1")

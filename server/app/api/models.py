@@ -99,3 +99,39 @@ def delete_model_config(config_id: uuid.UUID, db: Session = Depends(get_db)):
 
     db.delete(config)
     db.commit()
+
+
+from pydantic import BaseModel
+from datetime import datetime
+
+
+class RotateModelKeyRequest(BaseModel):
+    new_api_key: str
+
+
+class RotateModelKeyResponse(BaseModel):
+    status: str
+    rotated_at: str
+
+
+@router.post("/{config_id}/rotate-key", response_model=RotateModelKeyResponse)
+def rotate_model_key(
+    config_id: uuid.UUID,
+    data: RotateModelKeyRequest,
+    db: Session = Depends(get_db),
+):
+    """Rotate API key for a model configuration."""
+    config = db.query(ModelConfig).filter(
+        ModelConfig.id == config_id,
+        ModelConfig.user_id == MVP_USER_ID,
+    ).first()
+    if not config:
+        raise HTTPException(status_code=404, detail="Model config not found")
+
+    config.api_key_encrypted = encrypt_secret(data.new_api_key)
+    db.commit()
+
+    return RotateModelKeyResponse(
+        status="rotated",
+        rotated_at=datetime.utcnow().isoformat(),
+    )

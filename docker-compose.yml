@@ -2,9 +2,9 @@ services:
   postgres:
     image: postgres:16
     environment:
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_DB: trader
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_DB: ${DB_NAME:-trader}
     ports:
       - "5432:5432"
     volumes:
@@ -14,16 +14,20 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   redis:
     image: redis:7
     ports:
       - "6379:6379"
+    volumes:
+      - redisdata:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   server:
     build:
@@ -35,44 +39,63 @@ services:
       - APP_ENV=${APP_ENV:-dev}
       - JWT_SECRET=${JWT_SECRET}
       - MASTER_KEY=${MASTER_KEY}
-      - DATABASE_URL=postgresql+psycopg://postgres:postgres@postgres:5432/trader
+      - DATABASE_URL=postgresql+psycopg://postgres:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-trader}
       - REDIS_URL=redis://redis:6379/0
       - PAPER_TRADING=${PAPER_TRADING:-true}
+      - LIVE_TRADING_CONFIRMATION=${LIVE_TRADING_CONFIRMATION:-}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_JSON=${LOG_JSON:-true}
+      - METRICS_ENABLED=${METRICS_ENABLED:-true}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - ./server:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
 
   worker:
     build:
       context: ./worker
       dockerfile: Dockerfile
     environment:
+      - DATABASE_URL=postgresql+psycopg://postgres:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-trader}
       - REDIS_URL=redis://redis:6379/0
+      - MASTER_KEY=${MASTER_KEY}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_JSON=${LOG_JSON:-true}
     depends_on:
+      postgres:
+        condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - ./worker:/app
+    restart: unless-stopped
 
   web:
     build:
       context: ./web
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NODE_ENV=${NODE_ENV:-production}
     depends_on:
       - server
-    volumes:
-      - ./web:/app
-      - /app/node_modules
-      - /app/.next
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
 
 volumes:
   pgdata:
+  redisdata:

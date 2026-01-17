@@ -103,3 +103,43 @@ def delete_exchange(exchange_id: uuid.UUID, db: Session = Depends(get_db)):
 
     db.delete(account)
     db.commit()
+
+
+class RotateKeyRequest(BaseModel):
+    new_api_key: str
+    new_api_secret: str
+
+
+class RotateKeyResponse(BaseModel):
+    status: str
+    rotated_at: str
+
+
+from pydantic import BaseModel
+from datetime import datetime
+
+
+@router.post("/{exchange_id}/rotate-key", response_model=RotateKeyResponse)
+def rotate_exchange_key(
+    exchange_id: uuid.UUID,
+    data: RotateKeyRequest,
+    db: Session = Depends(get_db),
+):
+    """Rotate API keys for an exchange account."""
+    account = db.query(ExchangeAccount).filter(
+        ExchangeAccount.id == exchange_id,
+        ExchangeAccount.user_id == MVP_USER_ID,
+    ).first()
+    if not account:
+        raise HTTPException(status_code=404, detail="Exchange account not found")
+
+    # Update keys
+    account.api_key_encrypted = encrypt_secret(data.new_api_key)
+    account.api_secret_encrypted = encrypt_secret(data.new_api_secret)
+
+    db.commit()
+
+    return RotateKeyResponse(
+        status="rotated",
+        rotated_at=datetime.utcnow().isoformat(),
+    )

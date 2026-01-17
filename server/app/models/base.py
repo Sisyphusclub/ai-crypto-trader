@@ -330,3 +330,33 @@ class DecisionLog(Base):
     trader = relationship("Trader", back_populates="decisions")
     signal = relationship("Signal")
     execution = relationship("TradePlan", foreign_keys=[trade_plan_id])
+
+
+class AlertSeverity(str, PyEnum):
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+    CRITICAL = "critical"
+
+
+class AlertCategory(str, PyEnum):
+    EXECUTION = "execution"
+    RISK = "risk"
+    EXCHANGE = "exchange"
+    SYSTEM = "system"
+    RECONCILE = "reconcile"
+
+
+class Alert(Base):
+    """System alerts for monitoring and notifications."""
+    __tablename__ = "alerts"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    severity = Column(Enum(AlertSeverity), nullable=False, index=True)
+    category = Column(Enum(AlertCategory), nullable=False, index=True)
+    title = Column(String(200), nullable=False)
+    message = Column(Text, nullable=False)
+    context_json = Column(JSONB, nullable=True)
+    acknowledged = Column(Boolean, default=False, nullable=False, index=True)
+    acknowledged_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
