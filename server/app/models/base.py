@@ -1,9 +1,10 @@
 """SQLAlchemy ORM models."""
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from enum import Enum as PyEnum
-from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Text, LargeBinary, Enum
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Text, LargeBinary, Enum, Numeric, UniqueConstraint
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
@@ -23,6 +24,30 @@ class ModelProvider(str, PyEnum):
 class SecretKind(str, PyEnum):
     EXCHANGE_KEY = "exchange_key"
     MODEL_KEY = "model_key"
+
+
+class TradeSide(str, PyEnum):
+    LONG = "long"
+    SHORT = "short"
+
+
+class TradePlanStatus(str, PyEnum):
+    PENDING = "pending"
+    ENTRY_PLACED = "entry_placed"
+    ENTRY_FILLED = "entry_filled"
+    TP_SL_PLACED = "tp_sl_placed"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class ExecutionStatus(str, PyEnum):
+    PENDING = "pending"
+    SUBMITTED = "submitted"
+    FILLED = "filled"
+    PARTIALLY_FILLED = "partially_filled"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
 
 
 class User(Base):
@@ -65,6 +90,7 @@ class ExchangeAccount(Base):
     last_sync_at = Column(DateTime, nullable=True)
 
     user = relationship("User", back_populates="exchange_accounts")
+    trade_plans = relationship("TradePlan", back_populates="exchange_account")
 
 
 class ModelConfig(Base):
@@ -81,6 +107,62 @@ class ModelConfig(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user = relationship("User", back_populates="model_configs")
+
+
+class TradePlan(Base):
+    """Trade plan with entry, TP, and SL configuration."""
+    __tablename__ = "trade_plans"
+    __table_args__ = (
+        UniqueConstraint("client_order_id", name="uq_trade_plans_client_order_id"),
+    )
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    exchange_account_id = Column(UUID(as_uuid=True), ForeignKey("exchange_accounts.id"), nullable=False, index=True)
+    client_order_id = Column(String(100), nullable=False, index=True)
+    symbol = Column(String(50), nullable=False, index=True)
+    side = Column(String(10), nullable=False)  # long/short
+    quantity = Column(Numeric(20, 8), nullable=False)
+    entry_price = Column(Numeric(20, 8), nullable=True)  # Filled price
+    tp_price = Column(Numeric(20, 8), nullable=True)
+    sl_price = Column(Numeric(20, 8), nullable=True)
+    leverage = Column(Numeric(5, 2), default=1, nullable=False)
+    entry_order = Column(JSONB, nullable=True)  # Exchange order details
+    tp_order = Column(JSONB, nullable=True)
+    sl_order = Column(JSONB, nullable=True)
+    status = Column(String(20), default="pending", nullable=False, index=True)
+    is_paper = Column(Boolean, default=True, nullable=False)
+    error_message = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    exchange_account = relationship("ExchangeAccount", back_populates="trade_plans")
+    executions = relationship("Execution", back_populates="trade_plan")
+
+
+class Execution(Base):
+    """Individual order execution record."""
+    __tablename__ = "executions"
+    __table_args__ = (
+        UniqueConstraint("exchange_order_id", name="uq_executions_exchange_order_id"),
+    )
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    trade_plan_id = Column(UUID(as_uuid=True), ForeignKey("trade_plans.id"), nullable=False, index=True)
+    order_type = Column(String(20), nullable=False)  # entry/tp/sl
+    exchange_order_id = Column(String(100), nullable=True)
+    client_order_id = Column(String(100), nullable=False, index=True)
+    symbol = Column(String(50), nullable=False)
+    side = Column(String(10), nullable=False)  # BUY/SELL
+    quantity = Column(Numeric(20, 8), nullable=False)
+    price = Column(Numeric(20, 8), nullable=True)  # Filled price
+    status = Column(String(20), default="pending", nullable=False, index=True)
+    exchange_response = Column(JSONB, nullable=True)
+    error_message = Column(Text, nullable=True)
+    is_paper = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    trade_plan = relationship("TradePlan", back_populates="executions")
 
 
 class AuditLog(Base):

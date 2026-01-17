@@ -5,9 +5,14 @@ from app.models.base import (
     ExchangeAccount,
     ModelConfig,
     AuditLog,
+    TradePlan,
+    Execution,
     ExchangeType,
     ModelProvider,
     SecretKind,
+    TradeSide,
+    TradePlanStatus,
+    ExecutionStatus,
 )
 
 __all__ = [
@@ -17,7 +22,12 @@ __all__ = [
     "ExchangeAccount",
     "ModelConfig",
     "AuditLog",
+    "TradePlan",
+    "Execution",
     "ExchangeType",
     "ModelProvider",
     "SecretKind",
+    "TradeSide",
+    "TradePlanStatus",
+    "ExecutionStatus",
 ]

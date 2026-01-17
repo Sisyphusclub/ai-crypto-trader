@@ -143,16 +143,26 @@ alembic downgrade -1
 - `POST /api/v1/tasks/ping` - Enqueue demo ping task
 - `GET /api/v1/tasks/{task_id}` - Get task status
 
+### Trading
+- `POST /api/v1/trade/preview` - Preview trade (margin, warnings)
+- `POST /api/v1/trade/execute` - Execute trade plan
+- `GET /api/v1/trade/positions` - Get open positions
+- `GET /api/v1/trade/orders` - Get open orders
+- `GET /api/v1/trade/plans` - List trade plans
+- `GET /api/v1/trade/plans/{id}` - Get trade plan details
+
 ## Project Structure
 
 ```
 ai-crypto-trader/
 ├── server/          # FastAPI backend
 │   ├── app/
-│   │   ├── api/     # API routers
-│   │   ├── core/    # Settings, crypto, database
-│   │   └── models/  # SQLAlchemy models
-│   └── migrations/  # Alembic migrations
+│   │   ├── adapters/  # Exchange adapters (Binance, Gate)
+│   │   ├── api/       # API routers
+│   │   ├── core/      # Settings, crypto, database
+│   │   └── models/    # SQLAlchemy models
+│   ├── migrations/    # Alembic migrations
+│   └── tests/         # Unit tests
 ├── worker/          # RQ background worker
 │   └── worker/
 │       └── tasks/   # Task definitions
@@ -163,8 +173,9 @@ ai-crypto-trader/
 └── docker-compose.yml
 ```
 
-## Current Status: Milestone 1 Complete
+## Current Status: Milestone 2 Complete
 
+### Milestone 1 (Done)
 - [x] Monorepo structure (web/server/worker)
 - [x] Docker Compose with health checks
 - [x] FastAPI with OpenAPI docs
@@ -176,6 +187,16 @@ ai-crypto-trader/
 - [x] Worker with RQ and demo ping task
 - [x] Next.js frontend with health status display
 
-## Next: Milestone 2 - Exchange Adapters
+### Milestone 2 (Done)
+- [x] ExchangeAdapter abstract base class
+- [x] BinanceAdapter (USDT-M perpetual futures)
+- [x] GateAdapter (USDT perpetual futures)
+- [x] Trade API: preview, execute, positions, orders
+- [x] State machine: entry → TP/SL → completed/failed
+- [x] Paper trading mode with confirm safety
+- [x] Idempotency via client_order_id
+- [x] Precision handling for quantities/prices
+
+## Next: Milestone 3 - Strategy Studio
 
 See `docs/TASKS.md` for the complete roadmap.

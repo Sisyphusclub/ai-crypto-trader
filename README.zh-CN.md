@@ -141,16 +141,26 @@ alembic downgrade -1
 - `POST /api/v1/tasks/ping` - 入队演示 ping 任务
 - `GET /api/v1/tasks/{task_id}` - 获取任务状态
 
+### 交易接口
+- `POST /api/v1/trade/preview` - 交易预览（保证金、风险提示）
+- `POST /api/v1/trade/execute` - 执行交易计划
+- `GET /api/v1/trade/positions` - 获取持仓列表
+- `GET /api/v1/trade/orders` - 获取挂单列表
+- `GET /api/v1/trade/plans` - 获取交易计划列表
+- `GET /api/v1/trade/plans/{id}` - 获取交易计划详情
+
 ## 项目结构
 
 ```
 ai-crypto-trader/
 ├── server/          # FastAPI 后端
 │   ├── app/
-│   │   ├── api/     # API 路由
-│   │   ├── core/    # 配置、加密、数据库
-│   │   └── models/  # SQLAlchemy 模型
-│   └── migrations/  # Alembic 迁移
+│   │   ├── adapters/  # 交易所适配器 (Binance, Gate)
+│   │   ├── api/       # API 路由
+│   │   ├── core/      # 配置、加密、数据库
+│   │   └── models/    # SQLAlchemy 模型
+│   ├── migrations/    # Alembic 迁移
+│   └── tests/         # 单元测试
 ├── worker/          # RQ 后台任务
 │   └── worker/
 │       └── tasks/   # 任务定义
@@ -161,8 +171,9 @@ ai-crypto-trader/
 └── docker-compose.yml
 ```
 
-## 当前进度：里程碑 1 完成
+## 当前进度：里程碑 2 完成
 
+### 里程碑 1（已完成）
 - [x] Monorepo 结构 (web/server/worker)
 - [x] Docker Compose 健康检查
 - [x] FastAPI + OpenAPI 文档
@@ -174,6 +185,16 @@ ai-crypto-trader/
 - [x] RQ Worker + 演示任务
 - [x] Next.js 前端健康状态显示
 
-## 下一步：里程碑 2 - 交易所适配器
+### 里程碑 2（已完成）
+- [x] ExchangeAdapter 抽象基类
+- [x] BinanceAdapter（USDT 永续合约）
+- [x] GateAdapter（USDT 永续合约）
+- [x] 交易 API：预览、执行、持仓、订单
+- [x] 状态机：入场 → TP/SL → 完成/失败
+- [x] 模拟交易模式 + confirm 安全确认
+- [x] client_order_id 幂等性
+- [x] 数量/价格精度处理
+
+## 下一步：里程碑 3 - 策略工作室
 
 详见 `docs/TASKS.md` 完整路线图。

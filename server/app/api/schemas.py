@@ -116,3 +116,106 @@ class TaskStatusResponse(BaseModel):
     task_id: str
     status: str
     result: Optional[str] = None
+
+
+# ============================================================
+# Trade Schemas
+# ============================================================
+
+class TradeSide(str, Enum):
+    LONG = "long"
+    SHORT = "short"
+
+
+class TradePreviewRequest(BaseModel):
+    """Request schema for trade preview."""
+    exchange_account_id: UUID
+    symbol: str = Field(..., min_length=1, max_length=50)
+    side: TradeSide
+    quantity: float = Field(..., gt=0)
+    tp_price: Optional[float] = Field(None, gt=0)
+    sl_price: Optional[float] = Field(None, gt=0)
+    leverage: int = Field(1, ge=1, le=125)
+
+
+class TradePreviewResponse(BaseModel):
+    """Response schema for trade preview."""
+    symbol: str
+    side: TradeSide
+    quantity: str
+    entry_price_estimate: str
+    tp_price: Optional[str] = None
+    sl_price: Optional[str] = None
+    leverage: int
+    estimated_margin: str
+    is_paper: bool
+    warnings: list[str] = []
+
+
+class TradeExecuteRequest(BaseModel):
+    """Request schema for trade execution."""
+    exchange_account_id: UUID
+    symbol: str = Field(..., min_length=1, max_length=50)
+    side: TradeSide
+    quantity: float = Field(..., gt=0)
+    tp_price: Optional[float] = Field(None, gt=0)
+    sl_price: Optional[float] = Field(None, gt=0)
+    leverage: int = Field(1, ge=1, le=125)
+    confirm: bool = False
+
+
+class TradeExecuteResponse(BaseModel):
+    """Response schema for trade execution."""
+    trade_plan_id: UUID
+    client_order_id: str
+    status: str
+    symbol: str
+    side: TradeSide
+    quantity: str
+    entry_price: Optional[str] = None
+    tp_price: Optional[str] = None
+    sl_price: Optional[str] = None
+    is_paper: bool
+    error_message: Optional[str] = None
+
+
+class PositionResponse(BaseModel):
+    """Response schema for position info."""
+    symbol: str
+    side: str
+    quantity: str
+    entry_price: str
+    unrealized_pnl: str
+    leverage: int
+    margin_type: str
+
+
+class OrderResponse(BaseModel):
+    """Response schema for order info."""
+    order_id: str
+    client_order_id: Optional[str] = None
+    symbol: str
+    status: str
+    filled_qty: Optional[str] = None
+    filled_price: Optional[str] = None
+
+
+class TradePlanResponse(BaseModel):
+    """Response schema for trade plan."""
+    id: UUID
+    client_order_id: str
+    symbol: str
+    side: str
+    quantity: str
+    entry_price: Optional[str] = None
+    tp_price: Optional[str] = None
+    sl_price: Optional[str] = None
+    leverage: str
+    status: str
+    is_paper: bool
+    error_message: Optional[str] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
