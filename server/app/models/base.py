@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum as PyEnum
-from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Text, LargeBinary, Enum, Numeric, UniqueConstraint
+from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Text, LargeBinary, Enum, Numeric, UniqueConstraint, Integer
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import declarative_base, relationship
 
@@ -50,6 +50,21 @@ class ExecutionStatus(str, PyEnum):
     CANCELLED = "cancelled"
 
 
+class Timeframe(str, PyEnum):
+    M1 = "1m"
+    M5 = "5m"
+    M15 = "15m"
+    M30 = "30m"
+    H1 = "1h"
+    H4 = "4h"
+    D1 = "1d"
+
+
+class SignalSide(str, PyEnum):
+    LONG = "long"
+    SHORT = "short"
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -60,6 +75,7 @@ class User(Base):
 
     exchange_accounts = relationship("ExchangeAccount", back_populates="user")
     model_configs = relationship("ModelConfig", back_populates="user")
+    strategies = relationship("Strategy", back_populates="user")
 
 
 class Secret(Base):
@@ -176,3 +192,62 @@ class AuditLog(Base):
     entity_id = Column(UUID(as_uuid=True), nullable=True)
     payload_json = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+
+class Strategy(Base):
+    """Trading strategy configuration."""
+    __tablename__ = "strategies"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    name = Column(String(100), nullable=False)
+    enabled = Column(Boolean, default=False, nullable=False, index=True)
+    exchange_scope = Column(JSONB, nullable=False, server_default='[]')
+    symbols = Column(JSONB, nullable=False, server_default='[]')
+    timeframe = Column(String(10), nullable=False, server_default='1h')
+    indicators_json = Column(JSONB, nullable=False, server_default='{}')
+    triggers_json = Column(JSONB, nullable=False, server_default='{}')
+    risk_json = Column(JSONB, nullable=False, server_default='{}')
+    cooldown_seconds = Column(Integer, default=3600, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = relationship("User", back_populates="strategies")
+    signals = relationship("Signal", back_populates="strategy")
+
+
+class MarketSnapshot(Base):
+    """Market data snapshot with computed indicators."""
+    __tablename__ = "market_snapshots"
+    __table_args__ = (
+        UniqueConstraint("exchange", "symbol", "timeframe", "timestamp", name="uq_snapshot_key"),
+    )
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    exchange = Column(String(20), nullable=False, index=True)
+    symbol = Column(String(50), nullable=False, index=True)
+    timeframe = Column(String(10), nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True)
+    ohlcv = Column(JSONB, nullable=False)
+    indicators = Column(JSONB, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    signals = relationship("Signal", back_populates="snapshot")
+
+
+class Signal(Base):
+    """Generated trading signal."""
+    __tablename__ = "signals"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id = Column(UUID(as_uuid=True), ForeignKey("strategies.id"), nullable=False, index=True)
+    symbol = Column(String(50), nullable=False, index=True)
+    timeframe = Column(String(10), nullable=False)
+    side = Column(String(10), nullable=False)
+    score = Column(Numeric(5, 2), nullable=False, server_default='1.00')
+    snapshot_id = Column(UUID(as_uuid=True), ForeignKey("market_snapshots.id"), nullable=True)
+    reason_summary = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    strategy = relationship("Strategy", back_populates="signals")
+    snapshot = relationship("MarketSnapshot", back_populates="signals")

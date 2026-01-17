@@ -1,4 +1,5 @@
 """Task queue API endpoints."""
+import uuid
 from fastapi import APIRouter, HTTPException
 from rq import Queue
 from rq.job import Job
@@ -24,6 +25,28 @@ def enqueue_ping(message: str = "pong"):
     """
     queue = _get_queue()
     job = queue.enqueue("worker.tasks.demo.ping_task", message)
+    return TaskEnqueueResponse(task_id=job.id, status="queued")
+
+
+@router.post("/evaluate-strategy/{strategy_id}", response_model=TaskEnqueueResponse)
+def enqueue_strategy_evaluation(strategy_id: uuid.UUID):
+    """
+    Enqueue a strategy evaluation task.
+    Returns the task ID for status polling.
+    """
+    queue = _get_queue()
+    job = queue.enqueue("worker.tasks.strategy.evaluate_strategy", str(strategy_id))
+    return TaskEnqueueResponse(task_id=job.id, status="queued")
+
+
+@router.post("/evaluate-all-strategies", response_model=TaskEnqueueResponse)
+def enqueue_all_strategies_evaluation():
+    """
+    Enqueue evaluation of all enabled strategies.
+    Returns the task ID for status polling.
+    """
+    queue = _get_queue()
+    job = queue.enqueue("worker.tasks.strategy.evaluate_all_strategies")
     return TaskEnqueueResponse(task_id=job.id, status="queued")
 
 

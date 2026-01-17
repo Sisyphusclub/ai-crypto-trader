@@ -141,7 +141,23 @@ alembic downgrade -1
 
 ### Tasks
 - `POST /api/v1/tasks/ping` - Enqueue demo ping task
+- `POST /api/v1/tasks/evaluate-strategy/{id}` - Evaluate a strategy
+- `POST /api/v1/tasks/evaluate-all-strategies` - Evaluate all enabled strategies
 - `GET /api/v1/tasks/{task_id}` - Get task status
+
+### Strategies
+- `POST /api/v1/strategies` - Create strategy
+- `GET /api/v1/strategies` - List strategies
+- `GET /api/v1/strategies/{id}` - Get strategy
+- `PUT /api/v1/strategies/{id}` - Update strategy
+- `DELETE /api/v1/strategies/{id}` - Delete strategy
+- `POST /api/v1/strategies/{id}/validate` - Validate strategy config
+- `POST /api/v1/strategies/{id}/toggle` - Toggle enabled/disabled
+- `GET /api/v1/strategies/{id}/signals` - Get strategy signals
+
+### Signals
+- `GET /api/v1/signals` - List signals (with filters)
+- `GET /api/v1/signals/{id}` - Get signal detail
 
 ### Trading
 - `POST /api/v1/trade/preview` - Preview trade (margin, warnings)
@@ -160,20 +176,24 @@ ai-crypto-trader/
 │   │   ├── adapters/  # Exchange adapters (Binance, Gate)
 │   │   ├── api/       # API routers
 │   │   ├── core/      # Settings, crypto, database
+│   │   ├── engine/    # Indicators and triggers
 │   │   └── models/    # SQLAlchemy models
 │   ├── migrations/    # Alembic migrations
 │   └── tests/         # Unit tests
 ├── worker/          # RQ background worker
-│   └── worker/
-│       └── tasks/   # Task definitions
+│   └── tasks/       # Task definitions
 ├── web/             # Next.js frontend
 │   └── app/
-│       └── components/
+│       ├── components/  # Reusable components
+│       ├── strategies/  # Strategy pages
+│       ├── signals/     # Signals pages
+│       ├── lib/         # API utilities
+│       └── types/       # TypeScript types
 ├── docs/            # Documentation
 └── docker-compose.yml
 ```
 
-## Current Status: Milestone 2 Complete
+## Current Status: Milestone 3 Complete
 
 ### Milestone 1 (Done)
 - [x] Monorepo structure (web/server/worker)
@@ -197,6 +217,15 @@ ai-crypto-trader/
 - [x] Idempotency via client_order_id
 - [x] Precision handling for quantities/prices
 
-## Next: Milestone 3 - Strategy Studio
+### Milestone 3 (Done)
+- [x] Strategy CRUD API with validation
+- [x] Indicators engine: EMA, RSI, ATR
+- [x] Triggers engine: thresholds, crossovers, AND logic
+- [x] Worker tasks: market data collection, strategy evaluation
+- [x] Cooldown mechanism for signal deduplication
+- [x] Frontend: Strategy Studio (/strategies)
+- [x] Frontend: Signals Dashboard
+
+## Next: Milestone 4 - AI + Risk Loop
 
 See `docs/TASKS.md` for the complete roadmap.

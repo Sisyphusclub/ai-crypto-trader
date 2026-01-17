@@ -337,3 +337,45 @@ class GateAdapter(ExchangeAdapter):
             return [self._parse_order_result(o) for o in data]
         except httpx.HTTPStatusError:
             return []
+
+    async def get_klines(
+        self,
+        symbol: str,
+        interval: str = "1h",
+        limit: int = 100,
+    ) -> dict[str, list[float]]:
+        """Fetch OHLCV kline data.
+
+        Returns:
+            Dict with keys: open, high, low, close, volume (oldest first)
+        """
+        gate_symbol = self._convert_symbol(symbol)
+        # Gate.io uses different interval format
+        interval_map = {
+            "1m": "1m", "5m": "5m", "15m": "15m", "30m": "30m",
+            "1h": "1h", "4h": "4h", "1d": "1d",
+        }
+        gate_interval = interval_map.get(interval, "1h")
+
+        data = await self._request("GET", "/api/v4/futures/usdt/candlesticks", {
+            "contract": gate_symbol,
+            "interval": gate_interval,
+            "limit": limit,
+        }, signed=False)
+
+        ohlcv: dict[str, list[float]] = {
+            "open": [],
+            "high": [],
+            "low": [],
+            "close": [],
+            "volume": [],
+        }
+
+        for k in data:
+            ohlcv["open"].append(float(k.get("o", 0)))
+            ohlcv["high"].append(float(k.get("h", 0)))
+            ohlcv["low"].append(float(k.get("l", 0)))
+            ohlcv["close"].append(float(k.get("c", 0)))
+            ohlcv["volume"].append(float(k.get("v", 0)))
+
+        return ohlcv

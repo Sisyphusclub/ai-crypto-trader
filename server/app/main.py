@@ -9,6 +9,8 @@ from app.api.exchanges import router as exchanges_router
 from app.api.models import router as models_router
 from app.api.tasks import router as tasks_router
 from app.api.trade import router as trade_router
+from app.api.strategies import router as strategies_router
+from app.api.signals import router as signals_router
 
 
 @asynccontextmanager
@@ -39,3 +41,5 @@ app.include_router(exchanges_router, prefix="/api/v1")
 app.include_router(models_router, prefix="/api/v1")
 app.include_router(tasks_router, prefix="/api/v1")
 app.include_router(trade_router, prefix="/api/v1")
+app.include_router(strategies_router, prefix="/api/v1")
+app.include_router(signals_router, prefix="/api/v1")

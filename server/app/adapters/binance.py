@@ -301,3 +301,37 @@ class BinanceAdapter(ExchangeAdapter):
             return [self._parse_order_result(o) for o in data]
         except httpx.HTTPStatusError:
             return []
+
+    async def get_klines(
+        self,
+        symbol: str,
+        interval: str = "1h",
+        limit: int = 100,
+    ) -> dict[str, list[float]]:
+        """Fetch OHLCV kline data.
+
+        Returns:
+            Dict with keys: open, high, low, close, volume (oldest first)
+        """
+        data = await self._request("GET", "/fapi/v1/klines", {
+            "symbol": symbol,
+            "interval": interval,
+            "limit": limit,
+        }, signed=False)
+
+        ohlcv: dict[str, list[float]] = {
+            "open": [],
+            "high": [],
+            "low": [],
+            "close": [],
+            "volume": [],
+        }
+
+        for k in data:
+            ohlcv["open"].append(float(k[1]))
+            ohlcv["high"].append(float(k[2]))
+            ohlcv["low"].append(float(k[3]))
+            ohlcv["close"].append(float(k[4]))
+            ohlcv["volume"].append(float(k[5]))
+
+        return ohlcv

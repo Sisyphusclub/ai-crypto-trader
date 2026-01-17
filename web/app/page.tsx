@@ -1,4 +1,5 @@
 import SystemStatus from './components/SystemStatus'
+import SignalsPanel from './components/SignalsPanel'
 
 export default function Home() {
   return (
@@ -19,6 +20,14 @@ export default function Home() {
             <ul className="space-y-2">
               <li>
                 <a
+                  href="/strategies"
+                  className="text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  Strategy Studio
+                </a>
+              </li>
+              <li>
+                <a
                   href="http://localhost:8000/docs"
                   target="_blank"
                   className="text-blue-400 hover:text-blue-300 transition-colors"
@@ -37,6 +46,10 @@ export default function Home() {
               </li>
             </ul>
           </div>
+        </div>
+
+        <div className="mt-6">
+          <SignalsPanel />
         </div>
 
         <div className="mt-8 p-4 bg-yellow-900/30 border border-yellow-700 rounded-lg">
