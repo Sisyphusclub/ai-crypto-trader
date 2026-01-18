@@ -5,6 +5,15 @@ import threading
 from unittest.mock import MagicMock, patch
 
 
+@pytest.fixture(autouse=True)
+def mock_settings():
+    """Mock settings for all tests."""
+    with patch('app.core.locks.settings') as mock:
+        mock.REDIS_LOCK_TTL = 30
+        mock.REDIS_LOCK_TIMEOUT = 10
+        yield mock
+
+
 class TestRedisLock:
     """Test Redis distributed lock implementation."""
 

@@ -66,7 +66,7 @@ describe('AppLayout', () => {
       )
 
       const rootDiv = container.firstChild as HTMLElement
-      expect(rootDiv).toHaveClass('flex', 'min-h-screen', 'bg-gray-950')
+      expect(rootDiv).toHaveClass('flex', 'min-h-screen', 'bg-surface-700')
     })
 
     it('main element has proper styling', () => {

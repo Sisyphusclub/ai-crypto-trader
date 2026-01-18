@@ -4,6 +4,16 @@ from unittest.mock import MagicMock, patch, AsyncMock
 from decimal import Decimal
 
 
+@pytest.fixture(autouse=True)
+def mock_settings():
+    """Mock settings for all tests."""
+    with patch('app.core.locks.settings') as mock:
+        mock.REDIS_LOCK_TTL = 30
+        mock.REDIS_LOCK_TIMEOUT = 10
+        mock.REDIS_URL = "redis://localhost:6379"
+        yield mock
+
+
 class TestReconcileTask:
     """Test reconciliation task functionality."""
 

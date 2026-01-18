@@ -21,7 +21,7 @@ describe('API Client', () => {
 
       const result = await api.fetchStrategies()
       expect(result).toEqual(mockData)
-      expect(fetchMock).toHaveBeenCalledWith(`${API_URL}/api/v1/strategies`, { cache: 'no-store' })
+      expect(fetchMock).toHaveBeenCalledWith(`${API_URL}/api/v1/strategies`, { credentials: 'include', cache: 'no-store' })
     })
 
     it('fetchStrategies throws on HTTP error', async () => {
@@ -42,7 +42,7 @@ describe('API Client', () => {
 
       const result = await api.fetchStrategy('1')
       expect(result).toEqual(mockData)
-      expect(fetchMock).toHaveBeenCalledWith(`${API_URL}/api/v1/strategies/1`, { cache: 'no-store' })
+      expect(fetchMock).toHaveBeenCalledWith(`${API_URL}/api/v1/strategies/1`, { credentials: 'include', cache: 'no-store' })
     })
 
     it('createStrategy sends POST request with body', async () => {

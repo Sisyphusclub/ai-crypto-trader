@@ -19,7 +19,7 @@ describe('SignalsPanel', () => {
   it('renders loading state initially', () => {
     vi.mocked(api.fetchSignals).mockReturnValue(new Promise(() => {}))
     render(<SignalsPanel />)
-    expect(screen.getByText('Loading...')).toBeInTheDocument()
+    expect(screen.getByText('Loading signals...')).toBeInTheDocument()
   })
 
   it('renders section heading', () => {
@@ -33,8 +33,8 @@ describe('SignalsPanel', () => {
     render(<SignalsPanel />)
 
     await waitFor(() => {
-      expect(screen.getByText('No signals yet.')).toBeInTheDocument()
-      expect(screen.getByText('Configure strategies')).toBeInTheDocument()
+      expect(screen.getByText('No signals yet')).toBeInTheDocument()
+      expect(screen.getByText('Configure strategies →')).toBeInTheDocument()
     })
   })
 

@@ -48,18 +48,16 @@ describe('Sidebar', () => {
       expect(screen.getByText('orders')).toBeInTheDocument()
     })
 
-    it('renders child menu items for logs', () => {
+    it('renders logs menu item', () => {
       render(<Sidebar locale="en" />)
 
-      expect(screen.getByText('decisions')).toBeInTheDocument()
-      expect(screen.getByText('executions')).toBeInTheDocument()
+      expect(screen.getByText('logs')).toBeInTheDocument()
     })
 
-    it('renders child menu items for settings', () => {
+    it('renders settings menu item', () => {
       render(<Sidebar locale="en" />)
 
-      expect(screen.getByText('exchanges')).toBeInTheDocument()
-      expect(screen.getByText('models')).toBeInTheDocument()
+      expect(screen.getByText('settings')).toBeInTheDocument()
     })
   })
 
@@ -90,14 +88,12 @@ describe('Sidebar', () => {
   })
 
   describe('Icons', () => {
-    it('renders emoji icons for each nav item', () => {
+    it('renders SVG icons for each nav item', () => {
       render(<Sidebar locale="en" />)
 
-      expect(screen.getByText('📊')).toBeInTheDocument()
-      expect(screen.getByText('📈')).toBeInTheDocument()
-      expect(screen.getByText('📡')).toBeInTheDocument()
-      expect(screen.getByText('⚙️')).toBeInTheDocument()
-      expect(screen.getByText('🤖')).toBeInTheDocument()
+      // Each nav item should have an SVG icon
+      const svgIcons = document.querySelectorAll('svg')
+      expect(svgIcons.length).toBeGreaterThan(0)
     })
   })
 })

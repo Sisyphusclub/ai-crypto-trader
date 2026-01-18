@@ -2,6 +2,7 @@
 import importlib.util
 import os
 import sys
+import types
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -22,8 +23,25 @@ _mock_settings.TRUSTED_PROXY = False
 
 # Patch the settings import
 sys.modules["app.core.settings"] = MagicMock(settings=_mock_settings)
-sys.modules["app.core.database"] = MagicMock()
-sys.modules["app.models"] = MagicMock()
+
+# Create proper module mocks that preserve package structure
+if "app.core.database" not in sys.modules:
+    _mock_db_module = types.ModuleType('app.core.database')
+    _mock_db_module.engine = MagicMock()
+    _mock_db_module.SessionLocal = MagicMock()
+    _mock_db_module.get_db = MagicMock()
+    sys.modules["app.core.database"] = _mock_db_module
+
+# Only mock app.models if not already a proper module
+if "app.models" not in sys.modules or not hasattr(sys.modules["app.models"], '__path__'):
+    _mock_models_module = types.ModuleType('app.models')
+    _mock_models_module.__path__ = []  # Mark as package
+    _mock_models_module.User = MagicMock()
+    _mock_models_module.ExchangeAccount = MagicMock()
+    _mock_models_module.ModelConfig = MagicMock()
+    _mock_models_module.Strategy = MagicMock()
+    _mock_models_module.Trader = MagicMock()
+    sys.modules["app.models"] = _mock_models_module
 
 _spec.loader.exec_module(auth)
 

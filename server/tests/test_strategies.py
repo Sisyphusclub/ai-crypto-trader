@@ -1,5 +1,6 @@
 """Tests for Strategies CRUD API."""
 import uuid
+import types
 import pytest
 from unittest.mock import MagicMock, patch
 import sys
@@ -9,13 +10,19 @@ import sys
 @pytest.fixture(autouse=True)
 def mock_database():
     """Mock database module to prevent actual DB connection."""
-    mock_db_module = MagicMock()
+    mock_db_module = types.ModuleType('app.core.database')
     mock_db_module.get_db = MagicMock()
     mock_db_module.engine = MagicMock()
+    mock_db_module.SessionLocal = MagicMock()
+
+    # Create a proper module mock for models that preserves package structure
+    mock_models_module = types.ModuleType('app.models')
+    mock_models_module.__path__ = []  # Mark as package
+    mock_models_module.Strategy = MagicMock()
 
     with patch.dict(sys.modules, {
         'app.core.database': mock_db_module,
-        'app.models': MagicMock(),
+        'app.models': mock_models_module,
     }):
         yield
 
