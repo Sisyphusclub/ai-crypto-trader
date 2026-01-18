@@ -63,6 +63,7 @@ class ModelConfigCreate(BaseModel):
     model_name: str = Field(..., min_length=1, max_length=100)
     label: str = Field(..., min_length=1, max_length=100)
     api_key: str = Field(..., min_length=1)
+    base_url: Optional[str] = Field(None, max_length=500)
 
 
 class ModelConfigUpdate(BaseModel):
@@ -70,6 +71,7 @@ class ModelConfigUpdate(BaseModel):
     model_name: Optional[str] = Field(None, min_length=1, max_length=100)
     label: Optional[str] = Field(None, min_length=1, max_length=100)
     api_key: Optional[str] = Field(None, min_length=1)
+    base_url: Optional[str] = Field(None, max_length=500)
 
 
 class ModelConfigResponse(BaseModel):
@@ -79,6 +81,7 @@ class ModelConfigResponse(BaseModel):
     model_name: str
     label: str
     api_key_masked: str
+    base_url: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 

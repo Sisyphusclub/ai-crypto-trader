@@ -1,18 +1,18 @@
 """Exchange accounts CRUD API."""
 import uuid
+from datetime import datetime
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.crypto import encrypt_secret, mask_secret
-from app.models import ExchangeAccount, ExchangeType as DBExchangeType
+from app.models import ExchangeAccount, ExchangeType as DBExchangeType, User
 from app.api.schemas import ExchangeCreate, ExchangeUpdate, ExchangeResponse, ExchangeType
+from app.api.auth import get_current_user
 
 router = APIRouter(prefix="/exchanges", tags=["exchanges"])
-
-# MVP: hardcoded user_id (single-user system)
-MVP_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
 
 def _to_response(account: ExchangeAccount) -> ExchangeResponse:
@@ -30,10 +30,10 @@ def _to_response(account: ExchangeAccount) -> ExchangeResponse:
 
 
 @router.post("", response_model=ExchangeResponse, status_code=status.HTTP_201_CREATED)
-def create_exchange(data: ExchangeCreate, db: Session = Depends(get_db)):
+def create_exchange(data: ExchangeCreate, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     """Create a new exchange account configuration."""
     account = ExchangeAccount(
-        user_id=MVP_USER_ID,
+        user_id=user.id,
         exchange=data.exchange.value,
         label=data.label,
         api_key_encrypted=encrypt_secret(data.api_key),
@@ -47,20 +47,20 @@ def create_exchange(data: ExchangeCreate, db: Session = Depends(get_db)):
 
 
 @router.get("", response_model=List[ExchangeResponse])
-def list_exchanges(db: Session = Depends(get_db)):
+def list_exchanges(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     """List all exchange accounts (secrets masked)."""
     accounts = db.query(ExchangeAccount).filter(
-        ExchangeAccount.user_id == MVP_USER_ID
+        ExchangeAccount.user_id == user.id
     ).all()
     return [_to_response(a) for a in accounts]
 
 
 @router.get("/{exchange_id}", response_model=ExchangeResponse)
-def get_exchange(exchange_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_exchange(exchange_id: uuid.UUID, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     """Get a single exchange account by ID."""
     account = db.query(ExchangeAccount).filter(
         ExchangeAccount.id == exchange_id,
-        ExchangeAccount.user_id == MVP_USER_ID,
+        ExchangeAccount.user_id == user.id,
     ).first()
     if not account:
         raise HTTPException(status_code=404, detail="Exchange account not found")
@@ -68,11 +68,11 @@ def get_exchange(exchange_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @router.put("/{exchange_id}", response_model=ExchangeResponse)
-def update_exchange(exchange_id: uuid.UUID, data: ExchangeUpdate, db: Session = Depends(get_db)):
+def update_exchange(exchange_id: uuid.UUID, data: ExchangeUpdate, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     """Update an exchange account configuration."""
     account = db.query(ExchangeAccount).filter(
         ExchangeAccount.id == exchange_id,
-        ExchangeAccount.user_id == MVP_USER_ID,
+        ExchangeAccount.user_id == user.id,
     ).first()
     if not account:
         raise HTTPException(status_code=404, detail="Exchange account not found")
@@ -92,11 +92,11 @@ def update_exchange(exchange_id: uuid.UUID, data: ExchangeUpdate, db: Session = 
 
 
 @router.delete("/{exchange_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_exchange(exchange_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_exchange(exchange_id: uuid.UUID, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     """Delete an exchange account configuration."""
     account = db.query(ExchangeAccount).filter(
         ExchangeAccount.id == exchange_id,
-        ExchangeAccount.user_id == MVP_USER_ID,
+        ExchangeAccount.user_id == user.id,
     ).first()
     if not account:
         raise HTTPException(status_code=404, detail="Exchange account not found")
@@ -115,20 +115,17 @@ class RotateKeyResponse(BaseModel):
     rotated_at: str
 
 
-from pydantic import BaseModel
-from datetime import datetime
-
-
 @router.post("/{exchange_id}/rotate-key", response_model=RotateKeyResponse)
 def rotate_exchange_key(
     exchange_id: uuid.UUID,
     data: RotateKeyRequest,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """Rotate API keys for an exchange account."""
     account = db.query(ExchangeAccount).filter(
         ExchangeAccount.id == exchange_id,
-        ExchangeAccount.user_id == MVP_USER_ID,
+        ExchangeAccount.user_id == user.id,
     ).first()
     if not account:
         raise HTTPException(status_code=404, detail="Exchange account not found")

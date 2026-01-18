@@ -67,6 +67,34 @@ npm run dev
 | API 文档 (ReDoc) | http://localhost:8000/redoc |
 | 健康检查 | http://localhost:8000/health |
 
+## 使用指南
+
+### 1. 首次登录
+
+启动平台后，访问 `http://localhost:3000`，系统将重定向到登录页面。
+
+- **注册账号**：点击「注册」创建首个账户
+- **登录系统**：输入用户名密码进入平台
+
+### 2. 语言切换
+
+平台支持 **中文** 和 **English**：
+
+- 点击顶栏语言图标（🌐）
+- 选择目标语言
+- URL 自动添加语言前缀：`/zh/*` 或 `/en/*`
+
+### 3. 新手引导
+
+首次登录后，完成 4 步引导配置：
+
+1. **连接交易所** - 添加 Binance/Gate API 密钥
+2. **添加 AI 模型** - 配置 OpenAI/Anthropic/Google API
+3. **创建策略** - 定义技术指标和触发条件
+4. **创建交易员** - 设置自动化交易风控参数
+
+每步必须完成才能开始 AI 交易。引导向导会跟踪进度并指导完成配置。
+
 ## 环境变量
 
 | 变量 | 必需 | 说明 |
@@ -78,6 +106,8 @@ npm run dev
 | `REDIS_URL` | 是 | Redis 连接字符串 |
 | `PAPER_TRADING` | 否 | 启用模拟交易模式（默认：`true`） |
 | `NEXT_PUBLIC_API_URL` | 否 | 前端使用的后端 API 地址（默认：`http://localhost:8000`） |
+| `TRUSTED_PROXY` | 否 | 设置为 `true` 当部署在反向代理（nginx/traefik）后时，用于正确识别客户端 IP |
+| `CORS_ORIGINS` | 否 | 允许的 CORS 来源（默认：`http://localhost:3000`） |
 
 ## 安全要求
 
@@ -119,6 +149,13 @@ alembic downgrade -1
 ```
 
 ## API 接口
+
+### 认证接口
+- `POST /api/v1/auth/register` - 注册新用户
+- `POST /api/v1/auth/login` - 登录（设置 httpOnly Cookie）
+- `POST /api/v1/auth/logout` - 登出（清除 Cookie）
+- `GET /api/v1/auth/me` - 获取当前用户信息
+- `GET /api/v1/auth/onboarding-status` - 检查新手引导完成状态
 
 ### 健康检查
 - `GET /health` - 系统健康检查（数据库、Redis 状态）

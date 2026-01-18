@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -5,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.settings import settings
 from app.core.startup import verify_startup_secrets
 from app.core.logging import setup_logging
+from app.api.auth import router as auth_router
 from app.api.health import router as health_router
 from app.api.exchanges import router as exchanges_router
 from app.api.models import router as models_router
@@ -36,9 +38,11 @@ app = FastAPI(
 )
 
 # CORS middleware for frontend
+cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+allow_origins = [o.strip() for o in cors_origins.split(",") if o.strip()] or ["http://localhost:3000"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -46,6 +50,7 @@ app.add_middleware(
 
 # Register routers
 app.include_router(health_router)
+app.include_router(auth_router, prefix="/api/v1")
 app.include_router(exchanges_router, prefix="/api/v1")
 app.include_router(models_router, prefix="/api/v1")
 app.include_router(tasks_router, prefix="/api/v1")

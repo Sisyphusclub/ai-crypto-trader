@@ -1,5 +1,10 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+from pathlib import Path
+
+# Compute path to project root .env file
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+_ENV_FILE = _PROJECT_ROOT / ".env"
 
 
 class Settings(BaseSettings):
@@ -29,9 +34,14 @@ class Settings(BaseSettings):
     # LIVE mode safety
     LIVE_TRADING_CONFIRMATION: str = ""
 
+    # Security
+    TRUSTED_PROXY: bool = False  # Set True when behind nginx/traefik
+    CORS_ORIGINS: str = "http://localhost:3000"
+
     class Config:
-        env_file = ".env"
+        env_file = str(_ENV_FILE)
         env_file_encoding = "utf-8"
+        extra = "ignore"
 
 
 @lru_cache

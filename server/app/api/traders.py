@@ -6,17 +6,16 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.settings import settings
-from app.models import Trader, ExchangeAccount, ModelConfig, Strategy
+from app.models import Trader, ExchangeAccount, ModelConfig, Strategy, User
 from app.api.schemas import (
     TraderCreate,
     TraderUpdate,
     TraderResponse,
     TraderStartRequest,
 )
+from app.api.auth import get_current_user
 
 router = APIRouter(prefix="/traders", tags=["traders"])
-
-MVP_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
 
 def _build_response(trader: Trader) -> TraderResponse:
@@ -44,9 +43,10 @@ def list_traders(
     enabled: bool = None,
     limit: int = 50,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """List all traders for the current user."""
-    query = db.query(Trader).filter(Trader.user_id == MVP_USER_ID)
+    query = db.query(Trader).filter(Trader.user_id == user.id)
     if enabled is not None:
         query = query.filter(Trader.enabled == enabled)
     traders = query.order_by(Trader.created_at.desc()).limit(limit).all()
@@ -57,12 +57,13 @@ def list_traders(
 def create_trader(
     data: TraderCreate,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """Create a new trader."""
     # Verify exchange account
     account = db.query(ExchangeAccount).filter(
         ExchangeAccount.id == data.exchange_account_id,
-        ExchangeAccount.user_id == MVP_USER_ID,
+        ExchangeAccount.user_id == user.id,
     ).first()
     if not account:
         raise HTTPException(status_code=404, detail="Exchange account not found")
@@ -70,7 +71,7 @@ def create_trader(
     # Verify model config
     model = db.query(ModelConfig).filter(
         ModelConfig.id == data.model_config_id,
-        ModelConfig.user_id == MVP_USER_ID,
+        ModelConfig.user_id == user.id,
     ).first()
     if not model:
         raise HTTPException(status_code=404, detail="Model config not found")
@@ -78,13 +79,13 @@ def create_trader(
     # Verify strategy
     strategy = db.query(Strategy).filter(
         Strategy.id == data.strategy_id,
-        Strategy.user_id == MVP_USER_ID,
+        Strategy.user_id == user.id,
     ).first()
     if not strategy:
         raise HTTPException(status_code=404, detail="Strategy not found")
 
     trader = Trader(
-        user_id=MVP_USER_ID,
+        user_id=user.id,
         name=data.name,
         exchange_account_id=data.exchange_account_id,
         model_config_id=data.model_config_id,
@@ -104,11 +105,12 @@ def create_trader(
 def get_trader(
     trader_id: uuid.UUID,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """Get a specific trader by ID."""
     trader = db.query(Trader).filter(
         Trader.id == trader_id,
-        Trader.user_id == MVP_USER_ID,
+        Trader.user_id == user.id,
     ).first()
     if not trader:
         raise HTTPException(status_code=404, detail="Trader not found")
@@ -120,11 +122,12 @@ def update_trader(
     trader_id: uuid.UUID,
     data: TraderUpdate,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """Update a trader."""
     trader = db.query(Trader).filter(
         Trader.id == trader_id,
-        Trader.user_id == MVP_USER_ID,
+        Trader.user_id == user.id,
     ).first()
     if not trader:
         raise HTTPException(status_code=404, detail="Trader not found")
@@ -149,11 +152,12 @@ def update_trader(
 def delete_trader(
     trader_id: uuid.UUID,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """Delete a trader."""
     trader = db.query(Trader).filter(
         Trader.id == trader_id,
-        Trader.user_id == MVP_USER_ID,
+        Trader.user_id == user.id,
     ).first()
     if not trader:
         raise HTTPException(status_code=404, detail="Trader not found")
@@ -167,11 +171,12 @@ def start_trader(
     trader_id: uuid.UUID,
     data: TraderStartRequest = TraderStartRequest(),
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """Start a trader (enable it)."""
     trader = db.query(Trader).filter(
         Trader.id == trader_id,
-        Trader.user_id == MVP_USER_ID,
+        Trader.user_id == user.id,
     ).first()
     if not trader:
         raise HTTPException(status_code=404, detail="Trader not found")
@@ -194,11 +199,12 @@ def start_trader(
 def stop_trader(
     trader_id: uuid.UUID,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """Stop a trader (disable it)."""
     trader = db.query(Trader).filter(
         Trader.id == trader_id,
-        Trader.user_id == MVP_USER_ID,
+        Trader.user_id == user.id,
     ).first()
     if not trader:
         raise HTTPException(status_code=404, detail="Trader not found")

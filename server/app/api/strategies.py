@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models import Strategy, Signal
+from app.models import Strategy, Signal, User
 from app.api.schemas import (
     StrategyCreate,
     StrategyUpdate,
@@ -15,10 +15,9 @@ from app.api.schemas import (
     SignalDetailResponse,
     ExchangeType,
 )
+from app.api.auth import get_current_user
 
 router = APIRouter(prefix="/strategies", tags=["strategies"])
-
-MVP_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
 
 def _to_response(strategy: Strategy) -> StrategyResponse:
@@ -99,13 +98,17 @@ def _validate_config(strategy: Strategy) -> tuple[List[str], List[str]]:
 
 
 @router.post("", response_model=StrategyResponse, status_code=status.HTTP_201_CREATED)
-def create_strategy(data: StrategyCreate, db: Session = Depends(get_db)):
+def create_strategy(
+    data: StrategyCreate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     """Create a new trading strategy."""
     risk_json = data.risk.model_dump()
     cooldown = risk_json.pop("cooldown_seconds", 3600)
 
     strategy = Strategy(
-        user_id=MVP_USER_ID,
+        user_id=user.id,
         name=data.name,
         exchange_scope=[e.value for e in data.exchange_scope],
         symbols=data.symbols,
@@ -122,20 +125,27 @@ def create_strategy(data: StrategyCreate, db: Session = Depends(get_db)):
 
 
 @router.get("", response_model=List[StrategyResponse])
-def list_strategies(db: Session = Depends(get_db)):
+def list_strategies(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     """List all strategies."""
     strategies = db.query(Strategy).filter(
-        Strategy.user_id == MVP_USER_ID
+        Strategy.user_id == user.id
     ).order_by(Strategy.created_at.desc()).all()
     return [_to_response(s) for s in strategies]
 
 
 @router.get("/{strategy_id}", response_model=StrategyResponse)
-def get_strategy(strategy_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_strategy(
+    strategy_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     """Get a single strategy by ID."""
     strategy = db.query(Strategy).filter(
         Strategy.id == strategy_id,
-        Strategy.user_id == MVP_USER_ID,
+        Strategy.user_id == user.id,
     ).first()
     if not strategy:
         raise HTTPException(status_code=404, detail="Strategy not found")
@@ -143,11 +153,16 @@ def get_strategy(strategy_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @router.put("/{strategy_id}", response_model=StrategyResponse)
-def update_strategy(strategy_id: uuid.UUID, data: StrategyUpdate, db: Session = Depends(get_db)):
+def update_strategy(
+    strategy_id: uuid.UUID,
+    data: StrategyUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     """Update a strategy."""
     strategy = db.query(Strategy).filter(
         Strategy.id == strategy_id,
-        Strategy.user_id == MVP_USER_ID,
+        Strategy.user_id == user.id,
     ).first()
     if not strategy:
         raise HTTPException(status_code=404, detail="Strategy not found")
@@ -179,11 +194,15 @@ def update_strategy(strategy_id: uuid.UUID, data: StrategyUpdate, db: Session = 
 
 
 @router.delete("/{strategy_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_strategy(strategy_id: uuid.UUID, db: Session = Depends(get_db)):
+def delete_strategy(
+    strategy_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     """Delete a strategy."""
     strategy = db.query(Strategy).filter(
         Strategy.id == strategy_id,
-        Strategy.user_id == MVP_USER_ID,
+        Strategy.user_id == user.id,
     ).first()
     if not strategy:
         raise HTTPException(status_code=404, detail="Strategy not found")
@@ -193,11 +212,15 @@ def delete_strategy(strategy_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @router.post("/{strategy_id}/validate", response_model=StrategyValidateResponse)
-def validate_strategy(strategy_id: uuid.UUID, db: Session = Depends(get_db)):
+def validate_strategy(
+    strategy_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     """Validate strategy configuration."""
     strategy = db.query(Strategy).filter(
         Strategy.id == strategy_id,
-        Strategy.user_id == MVP_USER_ID,
+        Strategy.user_id == user.id,
     ).first()
     if not strategy:
         raise HTTPException(status_code=404, detail="Strategy not found")
@@ -211,11 +234,15 @@ def validate_strategy(strategy_id: uuid.UUID, db: Session = Depends(get_db)):
 
 
 @router.post("/{strategy_id}/toggle", response_model=StrategyResponse)
-def toggle_strategy(strategy_id: uuid.UUID, db: Session = Depends(get_db)):
+def toggle_strategy(
+    strategy_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     """Toggle strategy enabled/disabled."""
     strategy = db.query(Strategy).filter(
         Strategy.id == strategy_id,
-        Strategy.user_id == MVP_USER_ID,
+        Strategy.user_id == user.id,
     ).first()
     if not strategy:
         raise HTTPException(status_code=404, detail="Strategy not found")
@@ -239,11 +266,12 @@ def get_strategy_signals(
     strategy_id: uuid.UUID,
     limit: int = 50,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """Get signals for a strategy."""
     strategy = db.query(Strategy).filter(
         Strategy.id == strategy_id,
-        Strategy.user_id == MVP_USER_ID,
+        Strategy.user_id == user.id,
     ).first()
     if not strategy:
         raise HTTPException(status_code=404, detail="Strategy not found")

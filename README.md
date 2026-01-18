@@ -69,6 +69,34 @@ npm run dev
 | API Docs (ReDoc) | http://localhost:8000/redoc |
 | Health Check | http://localhost:8000/health |
 
+## Getting Started
+
+### 1. First Login
+
+After starting the platform, navigate to `http://localhost:3000`. You'll be redirected to the login page.
+
+- **Register**: Click "Register" to create your first account
+- **Login**: Enter your credentials to access the platform
+
+### 2. Language Support
+
+The platform supports **Chinese (中文)** and **English**:
+
+- Click the language icon (🌐) in the top bar
+- Select your preferred language
+- URLs are prefixed with locale: `/zh/*` or `/en/*`
+
+### 3. Onboarding Wizard
+
+After first login, complete the 4-step onboarding:
+
+1. **Connect Exchange** - Add your Binance/Gate API credentials
+2. **Add AI Model** - Configure OpenAI/Anthropic/Google API
+3. **Create Strategy** - Define trading indicators and triggers
+4. **Create Trader** - Set up automated trading with risk limits
+
+Each step is required before AI trading can begin. The wizard tracks your progress and guides you through setup.
+
 ## Environment Variables
 
 | Variable | Required | Description |
@@ -80,6 +108,8 @@ npm run dev
 | `REDIS_URL` | Yes | Redis connection string |
 | `PAPER_TRADING` | No | Enable paper trading mode (default: `true`) |
 | `NEXT_PUBLIC_API_URL` | No | Backend API URL for frontend (default: `http://localhost:8000`) |
+| `TRUSTED_PROXY` | No | Set `true` when behind reverse proxy (nginx/traefik) for correct rate limiting |
+| `CORS_ORIGINS` | No | Allowed CORS origins (default: `http://localhost:3000`) |
 
 ## Security Requirements
 
@@ -121,6 +151,14 @@ alembic downgrade -1
 ```
 
 ## API Endpoints
+
+### Authentication
+
+- `POST /api/v1/auth/register` - Create new user account
+- `POST /api/v1/auth/login` - Login (sets httpOnly cookie)
+- `POST /api/v1/auth/logout` - Logout (clears cookie)
+- `GET /api/v1/auth/me` - Get current user info
+- `GET /api/v1/auth/onboarding-status` - Check onboarding completion
 
 ### Health & Status
 - `GET /health` - System health check (DB, Redis status)

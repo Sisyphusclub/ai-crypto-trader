@@ -132,6 +132,7 @@ class ModelConfig(Base):
     model_name = Column(String(100), nullable=False)
     label = Column(String(100), nullable=False)
     api_key_encrypted = Column(Text, nullable=False)
+    base_url = Column(String(500), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
