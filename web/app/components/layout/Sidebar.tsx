@@ -1,7 +1,8 @@
 'use client'
 
+import { useState, useCallback, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 
 interface NavItem {
@@ -84,15 +85,49 @@ const navItems: NavItem[] = [
 export default function Sidebar({ locale }: { locale: string }) {
   const t = useTranslations('nav')
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const [hash, setHash] = useState('')
 
-  const isActive = (href: string) => {
+  // 监听 hash 变化
+  useEffect(() => {
+    const updateHash = () => setHash(window.location.hash)
+    updateHash()
+    window.addEventListener('hashchange', updateHash)
+    return () => window.removeEventListener('hashchange', updateHash)
+  }, [pathname])
+
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(() => {
+    const initial = new Set<string>()
+    navItems.forEach(item => {
+      if (item.children) {
+        const fullPath = `/${locale}${item.href}`
+        if (pathname === fullPath || (item.href && pathname.startsWith(fullPath))) {
+          initial.add(item.key)
+        }
+      }
+    })
+    return initial
+  })
+
+  const toggleExpand = useCallback((key: string) => {
+    setExpandedItems(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) {
+        next.delete(key)
+      } else {
+        next.add(key)
+      }
+      return next
+    })
+  }, [])
+
+  const isActive = useCallback((href: string) => {
     const fullPath = `/${locale}${href}`
     return pathname === fullPath || (href && pathname.startsWith(fullPath))
-  }
+  }, [locale, pathname])
 
   return (
-    <aside className="w-64 bg-surface-700/50 backdrop-blur-md border-r border-white/5 min-h-screen flex flex-col">
-      {/* Brand Header */}
+    <aside className="w-64 bg-surface-700/80 border-r border-white/5 min-h-screen flex flex-col">
       <div className="p-5 border-b border-white/5">
         <Link href={`/${locale}`} className="flex items-center gap-3 group">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center shadow-glow group-hover:shadow-lg transition-shadow">
@@ -107,37 +142,71 @@ export default function Sidebar({ locale }: { locale: string }) {
         </Link>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const active = isActive(item.href)
+          const expanded = expandedItems.has(item.key)
+          const hasChildren = !!item.children
+
           return (
             <div key={item.key}>
-              <Link
-                href={`/${locale}${item.href}`}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                  active
-                    ? 'bg-primary/10 text-primary border-l-2 border-primary shadow-sm'
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <span className={active ? 'text-primary' : ''}>{item.icon}</span>
-                <span className="font-medium text-sm">{t(item.key)}</span>
-                {item.children && (
-                  <svg className={`w-4 h-4 ml-auto transition-transform ${active ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              {hasChildren ? (
+                <button
+                  onClick={() => toggleExpand(item.key)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                    active
+                      ? 'bg-primary/10 text-primary border-l-2 border-primary'
+                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <span className={active ? 'text-primary' : ''}>{item.icon}</span>
+                  <span className="font-medium text-sm">{t(item.key)}</span>
+                  <svg
+                    className={`w-4 h-4 ml-auto transition-transform ${expanded ? 'rotate-180' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                   </svg>
-                )}
-              </Link>
-              {item.children && active && (
+                </button>
+              ) : (
+                <Link
+                  href={`/${locale}${item.href}`}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                    active
+                      ? 'bg-primary/10 text-primary border-l-2 border-primary'
+                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <span className={active ? 'text-primary' : ''}>{item.icon}</span>
+                  <span className="font-medium text-sm">{t(item.key)}</span>
+                </Link>
+              )}
+              {hasChildren && expanded && (
                 <div className="ml-6 mt-1 space-y-0.5 border-l border-white/10 pl-3">
-                  {item.children.map((child) => {
-                    const childActive = pathname.includes(child.href.split('?')[0]) && child.href.split('?')[0] !== ''
+                  {item.children!.map((child) => {
+                    // 计算子菜单是否激活
+                    let childActive = false
+                    const basePath = child.href.split('?')[0].split('#')[0]
+                    const childHashPart = child.href.includes('#') ? '#' + child.href.split('#')[1] : ''
+                    const childQueryPart = child.href.includes('?') ? child.href.split('?')[1].split('#')[0] : ''
+
+                    if (pathname === `/${locale}${basePath}`) {
+                      if (childHashPart && hash === childHashPart) {
+                        childActive = true
+                      } else if (childQueryPart && searchParams.get('tab') === childQueryPart.split('=')[1]) {
+                        childActive = true
+                      } else if (!childHashPart && !childQueryPart) {
+                        childActive = true
+                      }
+                    }
                     return (
                       <Link
                         key={child.key}
                         href={`/${locale}${child.href}`}
-                        className={`block px-3 py-1.5 text-sm rounded transition-all duration-150 ${
+                        className={`block px-3 py-1.5 text-sm rounded transition-colors ${
                           childActive
                             ? 'text-primary bg-primary/5'
                             : 'text-white/40 hover:text-white/70 hover:bg-white/5'
@@ -154,9 +223,8 @@ export default function Sidebar({ locale }: { locale: string }) {
         })}
       </nav>
 
-      {/* Footer */}
       <div className="p-4 border-t border-white/5">
-        <div className="glass-card p-3 rounded-lg">
+        <div className="bg-surface-600/50 p-3 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
             <span className="text-xs text-white/60">System Status</span>

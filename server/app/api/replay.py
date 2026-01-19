@@ -16,11 +16,11 @@ from app.models import (
     MarketSnapshot,
     Trader,
     ExchangeAccount,
+    User,
 )
+from app.api.auth import get_current_user
 
 router = APIRouter(prefix="/replay", tags=["replay"])
-
-MVP_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
 
 def _sanitize_ohlcv(ohlcv: dict, limit: int = 5) -> dict:
@@ -165,6 +165,7 @@ def _build_replay_chain(
 def replay_decision(
     decision_id: uuid.UUID,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Get complete replay chain for a decision.
@@ -173,7 +174,7 @@ def replay_decision(
     """
     decision = db.query(DecisionLog).join(Trader).filter(
         DecisionLog.id == decision_id,
-        Trader.user_id == MVP_USER_ID,
+        Trader.user_id == user.id,
     ).first()
 
     if not decision:
@@ -203,6 +204,7 @@ def replay_decision(
 def replay_trade(
     trade_plan_id: uuid.UUID,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Get complete replay chain for a trade plan.
@@ -211,7 +213,7 @@ def replay_trade(
     """
     trade_plan = db.query(TradePlan).join(ExchangeAccount).filter(
         TradePlan.id == trade_plan_id,
-        ExchangeAccount.user_id == MVP_USER_ID,
+        ExchangeAccount.user_id == user.id,
     ).first()
 
     if not trade_plan:
@@ -240,6 +242,7 @@ def replay_trade(
 def replay_signal(
     signal_id: uuid.UUID,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Get replay chain starting from a signal.
@@ -258,7 +261,7 @@ def replay_signal(
     # Find all decisions for this signal
     decisions = db.query(DecisionLog).join(Trader).filter(
         DecisionLog.signal_id == signal_id,
-        Trader.user_id == MVP_USER_ID,
+        Trader.user_id == user.id,
     ).all()
 
     result = {
@@ -302,12 +305,13 @@ def replay_signal(
 def export_decision_json(
     decision_id: uuid.UUID,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Export decision replay chain as downloadable JSON.
     """
     # Reuse replay_decision logic
-    chain = replay_decision(decision_id, db)
+    chain = replay_decision(decision_id, db, user)
 
     return JSONResponse(
         content=chain,
@@ -322,11 +326,12 @@ def export_decision_json(
 def export_trade_json(
     trade_plan_id: uuid.UUID,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Export trade replay chain as downloadable JSON.
     """
-    chain = replay_trade(trade_plan_id, db)
+    chain = replay_trade(trade_plan_id, db, user)
 
     return JSONResponse(
         content=chain,

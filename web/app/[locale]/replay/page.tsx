@@ -8,6 +8,7 @@ import { AppLayout } from '../../components/layout'
 export default function ReplayPage() {
   const tNav = useTranslations('nav')
   const tCommon = useTranslations('common')
+  const tReplay = useTranslations('replay')
   const { locale } = useParams()
   const [selectedRange, setSelectedRange] = useState('7d')
 
@@ -18,7 +19,7 @@ export default function ReplayPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-display font-bold text-white">{tNav('replay')}</h1>
-            <p className="text-white/40 text-sm mt-1">Backtest and replay historical trading scenarios</p>
+            <p className="text-white/40 text-sm mt-1">{tReplay('subtitle')}</p>
           </div>
           <div className="flex items-center gap-3">
             <select
@@ -26,16 +27,16 @@ export default function ReplayPage() {
               onChange={(e) => setSelectedRange(e.target.value)}
               className="select-field"
             >
-              <option value="1d">Last 24 hours</option>
-              <option value="7d">Last 7 days</option>
-              <option value="30d">Last 30 days</option>
-              <option value="90d">Last 90 days</option>
+              <option value="1d">{tReplay('last24h')}</option>
+              <option value="7d">{tReplay('last7d')}</option>
+              <option value="30d">{tReplay('last30d')}</option>
+              <option value="90d">{tReplay('last90d')}</option>
             </select>
             <button className="btn-primary flex items-center gap-2">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
               </svg>
-              Start Replay
+              {tReplay('startReplay')}
             </button>
           </div>
         </div>
@@ -51,7 +52,7 @@ export default function ReplayPage() {
               </div>
               <div>
                 <p className="text-2xl font-display font-bold text-white">0</p>
-                <p className="text-xs text-white/40">Total Replays</p>
+                <p className="text-xs text-white/40">{tReplay('totalReplays')}</p>
               </div>
             </div>
           </div>
@@ -65,7 +66,7 @@ export default function ReplayPage() {
               </div>
               <div>
                 <p className="text-2xl font-display font-bold text-success">0%</p>
-                <p className="text-xs text-white/40">Win Rate</p>
+                <p className="text-xs text-white/40">{tReplay('winRate')}</p>
               </div>
             </div>
           </div>
@@ -79,7 +80,7 @@ export default function ReplayPage() {
               </div>
               <div>
                 <p className="text-2xl font-display font-bold text-accent">$0</p>
-                <p className="text-xs text-white/40">Simulated P&L</p>
+                <p className="text-xs text-white/40">{tReplay('simulatedPnl')}</p>
               </div>
             </div>
           </div>
@@ -93,7 +94,7 @@ export default function ReplayPage() {
               </div>
               <div>
                 <p className="text-2xl font-display font-bold text-info">0h</p>
-                <p className="text-xs text-white/40">Replay Time</p>
+                <p className="text-xs text-white/40">{tReplay('replayTime')}</p>
               </div>
             </div>
           </div>
@@ -104,7 +105,7 @@ export default function ReplayPage() {
           {/* Timeline */}
           <div className="lg:col-span-2 glass-card p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white">Replay Timeline</h2>
+              <h2 className="text-lg font-semibold text-white">{tReplay('replayTimeline')}</h2>
               <div className="flex items-center gap-2">
                 <button className="btn-ghost p-2">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -131,45 +132,45 @@ export default function ReplayPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
                 </svg>
               </div>
-              <p className="text-white/60 text-center mb-2">No replay sessions yet</p>
+              <p className="text-white/60 text-center mb-2">{tReplay('noReplaySessions')}</p>
               <p className="text-white/40 text-sm text-center max-w-sm">
-                Start a replay to backtest your trading strategies against historical data
+                {tReplay('startReplayHint')}
               </p>
             </div>
           </div>
 
           {/* Replay Config */}
           <div className="glass-card p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Replay Configuration</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">{tReplay('replayConfig')}</h2>
 
             <div className="space-y-4">
               <div>
-                <label className="label">Select Strategy</label>
+                <label className="label">{tReplay('selectStrategy')}</label>
                 <select className="select-field">
-                  <option value="">Choose a strategy...</option>
+                  <option value="">{tReplay('chooseStrategy')}</option>
                 </select>
               </div>
 
               <div>
-                <label className="label">Select Trader</label>
+                <label className="label">{tReplay('selectTrader')}</label>
                 <select className="select-field">
-                  <option value="">Choose a trader...</option>
+                  <option value="">{tReplay('chooseTrader')}</option>
                 </select>
               </div>
 
               <div>
-                <label className="label">Playback Speed</label>
+                <label className="label">{tReplay('playbackSpeed')}</label>
                 <select className="select-field">
-                  <option value="1">1x (Real-time)</option>
+                  <option value="1">1x ({tReplay('realtime')})</option>
                   <option value="2">2x</option>
                   <option value="5">5x</option>
                   <option value="10">10x</option>
-                  <option value="100">100x (Fast)</option>
+                  <option value="100">100x ({tReplay('fast')})</option>
                 </select>
               </div>
 
               <div>
-                <label className="label">Initial Balance</label>
+                <label className="label">{tReplay('initialBalance')}</label>
                 <input
                   type="number"
                   className="input-field"
@@ -181,14 +182,14 @@ export default function ReplayPage() {
               <div className="divider" />
 
               <div className="flex items-center justify-between text-sm">
-                <span className="text-white/60">Enable Stop Loss</span>
+                <span className="text-white/60">{tReplay('enableStopLoss')}</span>
                 <button className="w-10 h-6 rounded-full bg-surface-500 relative transition-colors">
                   <span className="absolute left-1 top-1 w-4 h-4 rounded-full bg-white/60 transition-transform" />
                 </button>
               </div>
 
               <div className="flex items-center justify-between text-sm">
-                <span className="text-white/60">Enable Take Profit</span>
+                <span className="text-white/60">{tReplay('enableTakeProfit')}</span>
                 <button className="w-10 h-6 rounded-full bg-surface-500 relative transition-colors">
                   <span className="absolute left-1 top-1 w-4 h-4 rounded-full bg-white/60 transition-transform" />
                 </button>
@@ -200,7 +201,7 @@ export default function ReplayPage() {
         {/* Replay History */}
         <div className="glass-card overflow-hidden">
           <div className="p-4 border-b border-white/5">
-            <h2 className="text-lg font-semibold text-white">Replay History</h2>
+            <h2 className="text-lg font-semibold text-white">{tReplay('replayHistory')}</h2>
           </div>
           <div className="p-8 text-center">
             <svg className="w-12 h-12 text-white/20 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>

@@ -12,12 +12,11 @@ from app.core.database import get_db
 from app.core.settings import settings
 from app.core.cache import realtime_cache
 from app.core.crypto import decrypt_secret
-from app.models import ExchangeAccount, Signal, DecisionLog, TradePlan, Trader
+from app.models import ExchangeAccount, Signal, DecisionLog, TradePlan, Trader, User
 from app.adapters import BinanceAdapter, GateAdapter
+from app.api.auth import get_current_user
 
 router = APIRouter(prefix="/stream", tags=["stream"])
-
-MVP_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
 # Valid event types
 VALID_TYPES = {"positions", "orders", "signals", "decisions", "executions", "pnl"}
@@ -186,13 +185,14 @@ async def event_generator(
     types: Set[str],
     exchange_account_id: Optional[uuid.UUID],
     last_event_id: Optional[str],
+    user_id: uuid.UUID,
 ):
     """Generate SSE events."""
     event_counter = int(datetime.now(timezone.utc).timestamp() * 1000)
 
     # Get exchange accounts for user
     accounts = db.query(ExchangeAccount).filter(
-        ExchangeAccount.user_id == MVP_USER_ID,
+        ExchangeAccount.user_id == user_id,
         ExchangeAccount.status == "active",
     ).all()
 
@@ -277,7 +277,7 @@ async def event_generator(
             # New decisions (append mode)
             if "decisions" in types:
                 latest_decision = db.query(DecisionLog).join(Trader).filter(
-                    Trader.user_id == MVP_USER_ID,
+                    Trader.user_id == user_id,
                 ).order_by(DecisionLog.created_at.desc()).first()
                 if latest_decision and str(latest_decision.id) != last_decision_id:
                     last_decision_id = str(latest_decision.id)
@@ -316,6 +316,7 @@ async def stream(
     types: str = Query("positions,orders,pnl", description="Comma-separated event types"),
     exchange_account_id: Optional[uuid.UUID] = Query(None, description="Filter by exchange account"),
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Server-Sent Events stream for real-time data.
@@ -342,7 +343,7 @@ async def stream(
     last_event_id = request.headers.get("Last-Event-ID")
 
     return StreamingResponse(
-        event_generator(request, db, requested_types, exchange_account_id, last_event_id),
+        event_generator(request, db, requested_types, exchange_account_id, last_event_id, user.id),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -356,13 +357,14 @@ async def stream(
 async def get_snapshot(
     exchange_account_id: Optional[uuid.UUID] = Query(None),
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Get current snapshot of all real-time data (non-streaming).
     Useful for initial page load before SSE connects.
     """
     accounts = db.query(ExchangeAccount).filter(
-        ExchangeAccount.user_id == MVP_USER_ID,
+        ExchangeAccount.user_id == user.id,
         ExchangeAccount.status == "active",
     ).all()
 
@@ -393,13 +395,13 @@ async def get_snapshot(
 
     # Latest decisions
     decisions = db.query(DecisionLog).join(Trader).filter(
-        Trader.user_id == MVP_USER_ID,
+        Trader.user_id == user.id,
     ).order_by(DecisionLog.created_at.desc()).limit(10).all()
     result["decisions"] = [_sanitize_decision(d) for d in decisions]
 
     # Latest executions
     executions = db.query(TradePlan).join(ExchangeAccount).filter(
-        ExchangeAccount.user_id == MVP_USER_ID,
+        ExchangeAccount.user_id == user.id,
     ).order_by(TradePlan.created_at.desc()).limit(10).all()
     result["executions"] = [_sanitize_execution(e) for e in executions]
 

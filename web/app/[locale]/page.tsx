@@ -15,13 +15,13 @@ import { useDashboardData } from '../components/dashboard/useDashboardData'
 
 type ChartView = 'equity' | 'market'
 
-function ConnectionStatus({ connected, error }: { connected: boolean; error: string | null }) {
+function ConnectionStatus({ connected, error, t }: { connected: boolean; error: string | null; t: (key: string) => string }) {
   return (
     <div className="flex items-center gap-2">
       <span
         className={`w-2 h-2 rounded-full ${connected ? 'bg-success animate-pulse' : 'bg-danger'}`}
       />
-      <span className="text-xs text-white/40">{connected ? 'Live' : error || 'Disconnected'}</span>
+      <span className="text-xs text-white/40">{connected ? t('connected') : error || t('disconnected')}</span>
     </div>
   )
 }
@@ -137,7 +137,7 @@ export default function OverviewPage() {
             </h1>
             <p className="text-white/50 mt-1">{t('subtitle')}</p>
           </div>
-          <ConnectionStatus connected={connected} error={sseError} />
+          <ConnectionStatus connected={connected} error={sseError} t={t} />
         </div>
 
         {error && (

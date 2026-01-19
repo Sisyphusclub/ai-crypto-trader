@@ -9,11 +9,10 @@ from sqlalchemy import func
 
 from app.core.database import get_db
 from app.core.settings import settings
-from app.models import TradePlan, Execution, ExchangeAccount
+from app.models import TradePlan, Execution, ExchangeAccount, User
+from app.api.auth import get_current_user
 
 router = APIRouter(prefix="/pnl", tags=["pnl"])
-
-MVP_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
 
 @router.get("/summary")
@@ -23,6 +22,7 @@ def get_pnl_summary(
     exchange_account_id: Optional[uuid.UUID] = Query(None),
     symbol: Optional[str] = Query(None),
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Get PnL summary for completed trades.
@@ -31,7 +31,7 @@ def get_pnl_summary(
     For real-time unrealized PnL, use /stream endpoint.
     """
     query = db.query(TradePlan).join(ExchangeAccount).filter(
-        ExchangeAccount.user_id == MVP_USER_ID,
+        ExchangeAccount.user_id == user.id,
         TradePlan.status == "completed",
     )
 
@@ -92,6 +92,7 @@ def get_pnl_timeseries(
     bucket: str = Query("1h", description="Time bucket: 1m, 5m, 1h, 1d"),
     exchange_account_id: Optional[uuid.UUID] = Query(None),
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """
     Get PnL timeseries data for charting.
@@ -104,6 +105,12 @@ def get_pnl_timeseries(
     if not from_date:
         from_date = to_date - timedelta(hours=24)
 
+    # Ensure both dates are timezone-aware
+    if from_date.tzinfo is None:
+        from_date = from_date.replace(tzinfo=timezone.utc)
+    if to_date.tzinfo is None:
+        to_date = to_date.replace(tzinfo=timezone.utc)
+
     # Parse bucket to timedelta
     bucket_map = {
         "1m": timedelta(minutes=1),
@@ -114,10 +121,10 @@ def get_pnl_timeseries(
     bucket_delta = bucket_map.get(bucket, timedelta(hours=1))
 
     query = db.query(TradePlan).join(ExchangeAccount).filter(
-        ExchangeAccount.user_id == MVP_USER_ID,
+        ExchangeAccount.user_id == user.id,
         TradePlan.status.in_(["completed", "entry_filled", "tp_sl_placed"]),
-        TradePlan.created_at >= from_date,
-        TradePlan.created_at <= to_date,
+        TradePlan.created_at >= from_date.replace(tzinfo=None),
+        TradePlan.created_at <= to_date.replace(tzinfo=None),
     )
 
     if exchange_account_id:
@@ -163,13 +170,14 @@ def get_pnl_timeseries(
 def get_today_pnl(
     exchange_account_id: Optional[uuid.UUID] = Query(None),
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """Get today's PnL summary."""
     today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
 
     query = db.query(TradePlan).join(ExchangeAccount).filter(
-        ExchangeAccount.user_id == MVP_USER_ID,
-        TradePlan.created_at >= today_start,
+        ExchangeAccount.user_id == user.id,
+        TradePlan.created_at >= today_start.replace(tzinfo=None),
     )
 
     if exchange_account_id:

@@ -5,16 +5,15 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models import DecisionLog, Trader, TradePlan, Execution
+from app.models import DecisionLog, Trader, TradePlan, Execution, User
 from app.api.schemas import (
     DecisionLogResponse,
     DecisionLogDetailResponse,
     TradePlanResponse,
 )
+from app.api.auth import get_current_user
 
 router = APIRouter(prefix="/logs", tags=["logs"])
-
-MVP_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
 
 def _build_decision_response(log: DecisionLog) -> DecisionLogResponse:
@@ -75,10 +74,11 @@ def list_decisions(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """List decision logs with filtering."""
     query = db.query(DecisionLog).join(Trader).filter(
-        Trader.user_id == MVP_USER_ID,
+        Trader.user_id == user.id,
     )
 
     if trader_id:
@@ -96,11 +96,12 @@ def list_decisions(
 def get_decision(
     decision_id: uuid.UUID,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """Get a specific decision log by ID."""
     log = db.query(DecisionLog).join(Trader).filter(
         DecisionLog.id == decision_id,
-        Trader.user_id == MVP_USER_ID,
+        Trader.user_id == user.id,
     ).first()
 
     if not log:
@@ -117,12 +118,13 @@ def list_executions(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """List execution trade plans with filtering."""
     query = db.query(TradePlan).join(DecisionLog, DecisionLog.trade_plan_id == TradePlan.id).join(
         Trader, Trader.id == DecisionLog.trader_id
     ).filter(
-        Trader.user_id == MVP_USER_ID,
+        Trader.user_id == user.id,
     )
 
     if trader_id:
@@ -159,12 +161,13 @@ def list_executions(
 def get_stats(
     trader_id: Optional[uuid.UUID] = None,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """Get aggregated stats for decisions."""
     from sqlalchemy import func
 
     base_query = db.query(DecisionLog).join(Trader).filter(
-        Trader.user_id == MVP_USER_ID,
+        Trader.user_id == user.id,
     )
 
     if trader_id:

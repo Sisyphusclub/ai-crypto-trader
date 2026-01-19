@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { Signal } from '../types/strategy'
 import { fetchSignals } from '../lib/api'
 
 export default function SignalsPanel() {
+  const t = useTranslations('signals')
   const [signals, setSignals] = useState<Signal[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -39,7 +41,7 @@ export default function SignalsPanel() {
             </svg>
           </div>
           <h2 id="signals-heading" className="text-base font-display font-semibold text-white">
-            Recent Signals
+            {t('recentSignals')}
           </h2>
         </div>
         <div className="flex gap-1">
@@ -51,7 +53,7 @@ export default function SignalsPanel() {
                 : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
             }`}
           >
-            All
+            {t('all')}
           </button>
           <button
             onClick={() => setFilter({ side: 'long' })}
@@ -61,7 +63,7 @@ export default function SignalsPanel() {
                 : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
             }`}
           >
-            Long
+            {t('long')}
           </button>
           <button
             onClick={() => setFilter({ side: 'short' })}
@@ -71,7 +73,7 @@ export default function SignalsPanel() {
                 : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
             }`}
           >
-            Short
+            {t('short')}
           </button>
         </div>
       </div>
@@ -92,7 +94,7 @@ export default function SignalsPanel() {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
-            <span className="text-sm">Loading signals...</span>
+            <span className="text-sm">{t('loadingSignals')}</span>
           </div>
         </div>
       ) : signals.length === 0 ? (
@@ -102,12 +104,12 @@ export default function SignalsPanel() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
           </div>
-          <p className="text-white/40 text-sm mb-2">No signals yet</p>
+          <p className="text-white/40 text-sm mb-2">{t('noSignalsYet')}</p>
           <Link
             href="/strategies"
             className="text-primary hover:text-primary/80 text-sm font-medium transition-colors"
           >
-            Configure strategies →
+            {t('configureStrategies')}
           </Link>
         </div>
       ) : (
@@ -163,7 +165,7 @@ export default function SignalsPanel() {
           href="/signals"
           className="inline-flex items-center gap-1 text-primary hover:text-primary/80 text-sm font-medium transition-colors"
         >
-          View all signals
+          {t('viewAllSignals')}
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>

@@ -5,12 +5,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models import Signal, Strategy, MarketSnapshot
+from app.models import Signal, Strategy, MarketSnapshot, User
 from app.api.schemas import SignalResponse, SignalDetailResponse
+from app.api.auth import get_current_user
 
 router = APIRouter(prefix="/signals", tags=["signals"])
-
-MVP_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
 
 @router.get("", response_model=List[SignalResponse])
@@ -20,10 +19,11 @@ def list_signals(
     side: Optional[str] = None,
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """List recent signals with optional filters."""
     query = db.query(Signal).join(Strategy).filter(
-        Strategy.user_id == MVP_USER_ID
+        Strategy.user_id == user.id
     )
 
     if strategy_id:
@@ -51,11 +51,15 @@ def list_signals(
 
 
 @router.get("/{signal_id}", response_model=SignalDetailResponse)
-def get_signal(signal_id: uuid.UUID, db: Session = Depends(get_db)):
+def get_signal(
+    signal_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     """Get detailed signal information including indicator values."""
     signal = db.query(Signal).join(Strategy).filter(
         Signal.id == signal_id,
-        Strategy.user_id == MVP_USER_ID,
+        Strategy.user_id == user.id,
     ).first()
 
     if not signal:

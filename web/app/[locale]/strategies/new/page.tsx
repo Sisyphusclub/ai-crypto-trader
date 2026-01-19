@@ -237,14 +237,17 @@ export default function NewStrategyPage() {
           {/* Indicators */}
           <div className="glass-card p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-display font-semibold text-white flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                {t('indicators')}
-              </h2>
+              <div>
+                <h2 className="text-lg font-display font-semibold text-white flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  {t('indicators')}
+                </h2>
+                <p className="text-white/40 text-sm mt-1">{t('indicatorsHelp')}</p>
+              </div>
               <button type="button" onClick={addIndicator} className="btn-ghost text-sm">
                 + {t('addIndicator')}
               </button>
@@ -259,15 +262,20 @@ export default function NewStrategyPage() {
                     className="input-field w-36"
                     placeholder={t('indicatorName')}
                   />
-                  <select
-                    value={ind.type}
-                    onChange={(e) => updateIndicator(i, 'type', e.target.value)}
-                    className="input-field w-28"
-                  >
-                    {INDICATOR_TYPES.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
+                  <div className="relative group">
+                    <select
+                      value={ind.type}
+                      onChange={(e) => updateIndicator(i, 'type', e.target.value)}
+                      className="input-field w-28"
+                    >
+                      {INDICATOR_TYPES.map((type) => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                    <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 rounded-lg text-xs text-white/70 z-10 shadow-lg">
+                      {t(`indicatorTypes.${ind.type}`)}
+                    </div>
+                  </div>
                   <div className="flex items-center gap-2">
                     <span className="text-white/40 text-sm">{t('period')}:</span>
                     <input
@@ -295,14 +303,17 @@ export default function NewStrategyPage() {
           {/* Trigger Rules */}
           <div className="glass-card p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-display font-semibold text-white flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                {t('triggerRules')}
-              </h2>
+              <div>
+                <h2 className="text-lg font-display font-semibold text-white flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  {t('triggerRules')}
+                </h2>
+                <p className="text-white/40 text-sm mt-1">{t('triggerRulesHelp')}</p>
+              </div>
               <button type="button" onClick={addRule} className="btn-ghost text-sm">
                 + {t('addRule')}
               </button>
@@ -354,15 +365,20 @@ export default function NewStrategyPage() {
                             <option key={ind.name} value={ind.name}>{ind.name}</option>
                           ))}
                         </select>
-                        <select
-                          value={cond.operator}
-                          onChange={(e) => updateCondition(ri, ci, 'operator', e.target.value)}
-                          className="input-field w-44"
-                        >
-                          {OPERATORS.map((op) => (
-                            <option key={op} value={op}>{operatorLabels[op]}</option>
-                          ))}
-                        </select>
+                        <div className="relative group">
+                          <select
+                            value={cond.operator}
+                            onChange={(e) => updateCondition(ri, ci, 'operator', e.target.value)}
+                            className="input-field w-44"
+                          >
+                            {OPERATORS.map((op) => (
+                              <option key={op} value={op}>{operatorLabels[op]}</option>
+                            ))}
+                          </select>
+                          <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 rounded-lg text-xs text-white/70 z-10 shadow-lg">
+                            {t(`operatorsHelp.${cond.operator === '<' ? 'lt' : cond.operator === '>' ? 'gt' : cond.operator === 'crosses_above' ? 'crossesAbove' : 'crossesBelow'}`)}
+                          </div>
+                        </div>
                         {cond.operator === 'crosses_above' || cond.operator === 'crosses_below' ? (
                           <select
                             value={cond.compare_to || ''}
@@ -404,17 +420,25 @@ export default function NewStrategyPage() {
 
           {/* Risk Management */}
           <div className="glass-card p-6">
-            <h2 className="text-lg font-display font-semibold text-white mb-4 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-danger/10 flex items-center justify-center">
-                <svg className="w-4 h-4 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              {t('riskManagement')}
-            </h2>
+            <div className="mb-4">
+              <h2 className="text-lg font-display font-semibold text-white flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-danger/10 flex items-center justify-center">
+                  <svg className="w-4 h-4 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                {t('riskManagement')}
+              </h2>
+              <p className="text-white/40 text-sm mt-1">{t('riskManagementHelp')}</p>
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-sm text-white/60 mb-2">{t('maxLeverage')}</label>
+              <div className="group relative">
+                <label className="block text-sm text-white/60 mb-2 flex items-center gap-1">
+                  {t('maxLeverage')}
+                  <svg className="w-3.5 h-3.5 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </label>
                 <input
                   type="number"
                   value={maxLeverage}
@@ -423,9 +447,17 @@ export default function NewStrategyPage() {
                   min={1}
                   max={125}
                 />
+                <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-gray-900 rounded-lg text-xs text-white/70 z-10 shadow-lg">
+                  {t('maxLeverageHelp')}
+                </div>
               </div>
-              <div>
-                <label className="block text-sm text-white/60 mb-2">{t('cooldownSec')}</label>
+              <div className="group relative">
+                <label className="block text-sm text-white/60 mb-2 flex items-center gap-1">
+                  {t('cooldownSec')}
+                  <svg className="w-3.5 h-3.5 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </label>
                 <input
                   type="number"
                   value={cooldownSeconds}
@@ -433,9 +465,17 @@ export default function NewStrategyPage() {
                   className="input-field w-full"
                   min={0}
                 />
+                <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-56 p-2 bg-gray-900 rounded-lg text-xs text-white/70 z-10 shadow-lg">
+                  {t('cooldownHelp')}
+                </div>
               </div>
-              <div>
-                <label className="block text-sm text-white/60 mb-2">{t('tpAtrMulti')}</label>
+              <div className="group relative">
+                <label className="block text-sm text-white/60 mb-2 flex items-center gap-1">
+                  {t('tpAtrMulti')}
+                  <svg className="w-3.5 h-3.5 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </label>
                 <input
                   type="number"
                   value={tpAtrMultiplier}
@@ -444,9 +484,17 @@ export default function NewStrategyPage() {
                   step="0.1"
                   min={0}
                 />
+                <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 rounded-lg text-xs text-white/70 z-10 shadow-lg">
+                  {t('tpAtrMultiHelp')}
+                </div>
               </div>
-              <div>
-                <label className="block text-sm text-white/60 mb-2">{t('slAtrMulti')}</label>
+              <div className="group relative">
+                <label className="block text-sm text-white/60 mb-2 flex items-center gap-1">
+                  {t('slAtrMulti')}
+                  <svg className="w-3.5 h-3.5 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </label>
                 <input
                   type="number"
                   value={slAtrMultiplier}
@@ -455,6 +503,9 @@ export default function NewStrategyPage() {
                   step="0.1"
                   min={0}
                 />
+                <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 rounded-lg text-xs text-white/70 z-10 shadow-lg">
+                  {t('slAtrMultiHelp')}
+                </div>
               </div>
             </div>
           </div>

@@ -74,13 +74,13 @@
 }
 
 @layer components {
-  /* Glass Card - CEX Style */
+  /* Glass Card - CEX Style (optimized: no blur for performance) */
   .glass-card {
-    @apply bg-surface/80 backdrop-blur-md border border-white/10 rounded-xl shadow-glass;
+    @apply bg-surface-600/95 border border-white/10 rounded-xl shadow-glass;
   }
 
   .glass-card-hover {
-    @apply glass-card transition-all duration-200 hover:border-primary/30 hover:shadow-glow cursor-pointer;
+    @apply glass-card transition-colors hover:border-primary/30 cursor-pointer;
   }
 
   /* Stat Card */
@@ -88,43 +88,38 @@
     @apply glass-card p-4 relative overflow-hidden;
   }
 
-  .stat-card::before {
-    content: '';
-    @apply absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity duration-300;
-  }
-
-  .stat-card:hover::before {
-    @apply opacity-100;
+  .stat-card:hover {
+    @apply border-primary/20;
   }
 
   /* Primary Button */
   .btn-primary {
     @apply px-4 py-2 bg-primary hover:bg-primary-400 text-surface font-semibold rounded-lg
-           transition-all duration-200 shadow-glow hover:shadow-lg active:scale-95;
+           transition-colors shadow-glow;
   }
 
   /* Secondary Button */
   .btn-secondary {
     @apply px-4 py-2 bg-surface-50 hover:bg-surface-100 text-white/90 font-medium rounded-lg
-           border border-white/10 transition-all duration-200 hover:border-white/20;
+           border border-white/10 transition-colors hover:border-white/20;
   }
 
   /* Ghost Button */
   .btn-ghost {
-    @apply px-4 py-2 text-white/70 hover:text-white hover:bg-white/5 rounded-lg transition-all duration-200;
+    @apply px-4 py-2 text-white/70 hover:text-white hover:bg-white/5 rounded-lg transition-colors;
   }
 
   /* Danger Button */
   .btn-danger {
     @apply px-4 py-2 bg-danger/20 hover:bg-danger/30 text-danger font-medium rounded-lg
-           border border-danger/30 transition-all duration-200;
+           border border-danger/30 transition-colors;
   }
 
   /* Input Field */
   .input-field {
     @apply w-full px-4 py-2.5 bg-surface-300 border border-white/10 rounded-lg text-white
            placeholder:text-white/40 focus:outline-none focus:border-primary/50 focus:ring-1
-           focus:ring-primary/30 transition-all duration-200;
+           focus:ring-primary/30 transition-colors;
   }
 
   /* Select elements with input-field class */
@@ -225,7 +220,7 @@
 
   /* Modal Overlay */
   .modal-overlay {
-    @apply fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50;
+    @apply fixed inset-0 bg-black/70 flex items-center justify-center z-50;
   }
 
   .modal-content {

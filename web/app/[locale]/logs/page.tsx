@@ -10,6 +10,8 @@ import { fetchDecisions, fetchLogStats, fetchTraders } from '../../lib/api'
 export default function LogsPage() {
   const t = useTranslations('nav')
   const tCommon = useTranslations('common')
+  const tTopbar = useTranslations('topbar')
+  const tLogs = useTranslations('logs')
   const { locale } = useParams()
   const [decisions, setDecisions] = useState<DecisionLog[]>([])
   const [stats, setStats] = useState<LogStats | null>(null)
@@ -67,7 +69,7 @@ export default function LogsPage() {
         {/* Header */}
         <div>
           <h1 className="text-2xl font-display font-bold text-white">{t('logs')}</h1>
-          <p className="text-white/40 text-sm mt-1">AI trading decisions and executions</p>
+          <p className="text-white/40 text-sm mt-1">{tLogs('subtitle')}</p>
         </div>
 
         {/* Stats */}
@@ -82,7 +84,7 @@ export default function LogsPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-display font-bold text-white">{stats.total}</p>
-                  <p className="text-xs text-white/40">Total</p>
+                  <p className="text-xs text-white/40">{tLogs('total')}</p>
                 </div>
               </div>
             </div>
@@ -95,7 +97,7 @@ export default function LogsPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-display font-bold text-success">{stats.executed}</p>
-                  <p className="text-xs text-white/40">Executed</p>
+                  <p className="text-xs text-white/40">{tLogs('executed')}</p>
                 </div>
               </div>
             </div>
@@ -108,7 +110,7 @@ export default function LogsPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-display font-bold text-warning">{stats.blocked}</p>
-                  <p className="text-xs text-white/40">Blocked</p>
+                  <p className="text-xs text-white/40">{tLogs('blocked')}</p>
                 </div>
               </div>
             </div>
@@ -121,7 +123,7 @@ export default function LogsPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-display font-bold text-danger">{stats.failed}</p>
-                  <p className="text-xs text-white/40">Failed</p>
+                  <p className="text-xs text-white/40">{tLogs('failed')}</p>
                 </div>
               </div>
             </div>
@@ -134,7 +136,7 @@ export default function LogsPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-display font-bold text-primary">{stats.paper}</p>
-                  <p className="text-xs text-white/40">Paper</p>
+                  <p className="text-xs text-white/40">{tLogs('paper')}</p>
                 </div>
               </div>
             </div>
@@ -147,7 +149,7 @@ export default function LogsPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-display font-bold text-accent">{stats.live}</p>
-                  <p className="text-xs text-white/40">Live</p>
+                  <p className="text-xs text-white/40">{tLogs('live')}</p>
                 </div>
               </div>
             </div>
@@ -162,7 +164,7 @@ export default function LogsPage() {
               onChange={e => setFilters({ ...filters, trader_id: e.target.value })}
               className="select-field"
             >
-              <option value="">All Traders</option>
+              <option value="">{tLogs('allTraders')}</option>
               {traders.map(tr => (
                 <option key={tr.id} value={tr.id}>{tr.name}</option>
               ))}
@@ -172,12 +174,12 @@ export default function LogsPage() {
               onChange={e => setFilters({ ...filters, status: e.target.value })}
               className="select-field"
             >
-              <option value="">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="allowed">Allowed</option>
-              <option value="blocked">Blocked</option>
-              <option value="executed">Executed</option>
-              <option value="failed">Failed</option>
+              <option value="">{tLogs('allStatus')}</option>
+              <option value="pending">{tLogs('pending')}</option>
+              <option value="allowed">{tLogs('allowed')}</option>
+              <option value="blocked">{tLogs('blocked')}</option>
+              <option value="executed">{tLogs('executed')}</option>
+              <option value="failed">{tLogs('failed')}</option>
             </select>
             <select
               value={filters.is_paper === undefined ? '' : String(filters.is_paper)}
@@ -187,9 +189,9 @@ export default function LogsPage() {
               })}
               className="select-field"
             >
-              <option value="">All Modes</option>
-              <option value="true">Paper</option>
-              <option value="false">Live</option>
+              <option value="">{tLogs('allModes')}</option>
+              <option value="true">{tLogs('paper')}</option>
+              <option value="false">{tLogs('live')}</option>
             </select>
           </div>
         </div>
@@ -216,20 +218,20 @@ export default function LogsPage() {
               </svg>
             </div>
             <p className="text-white/60 mb-2">{tCommon('noData')}</p>
-            <p className="text-white/40 text-sm">Start a trader to see decision logs here</p>
+            <p className="text-white/40 text-sm">{tLogs('startTraderHint')}</p>
           </div>
         ) : (
           <div className="glass-card overflow-hidden overflow-x-auto">
             <table className="w-full">
               <thead className="bg-surface-500/30">
                 <tr>
-                  <th className="table-header">Time</th>
-                  <th className="table-header">Trader</th>
-                  <th className="table-header">Mode</th>
-                  <th className="table-header">Status</th>
-                  <th className="table-header">Confidence</th>
-                  <th className="table-header">Model</th>
-                  <th className="table-header">Summary</th>
+                  <th className="table-header">{tLogs('time')}</th>
+                  <th className="table-header">{tLogs('trader')}</th>
+                  <th className="table-header">{tLogs('mode')}</th>
+                  <th className="table-header">{tLogs('status')}</th>
+                  <th className="table-header">{tLogs('confidence')}</th>
+                  <th className="table-header">{tLogs('model')}</th>
+                  <th className="table-header">{tLogs('summary')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -243,7 +245,7 @@ export default function LogsPage() {
                     </td>
                     <td className="table-cell">
                       <span className={d.is_paper ? 'badge-warning' : 'badge-danger'}>
-                        {d.is_paper ? 'PAPER' : 'LIVE'}
+                        {d.is_paper ? tTopbar('paper').toUpperCase() : tTopbar('live').toUpperCase()}
                       </span>
                     </td>
                     <td className="table-cell">

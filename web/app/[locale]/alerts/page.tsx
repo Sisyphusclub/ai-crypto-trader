@@ -7,6 +7,7 @@ import { AppLayout } from '../../components/layout'
 export default function AlertsPage() {
   const tNav = useTranslations('nav')
   const tCommon = useTranslations('common')
+  const tAlerts = useTranslations('alerts')
   const { locale } = useParams()
 
   return (
@@ -16,13 +17,13 @@ export default function AlertsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-display font-bold text-white">{tNav('alerts')}</h1>
-            <p className="text-white/40 text-sm mt-1">Manage your trading alerts and notifications</p>
+            <p className="text-white/40 text-sm mt-1">{tAlerts('subtitle')}</p>
           </div>
           <button className="btn-primary flex items-center gap-2">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
-            Create Alert
+            {tAlerts('createAlert')}
           </button>
         </div>
 
@@ -36,11 +37,11 @@ export default function AlertsPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-white">Price Alerts</h3>
-                <p className="text-xs text-white/40">0 active</p>
+                <h3 className="font-semibold text-white">{tAlerts('priceAlerts')}</h3>
+                <p className="text-xs text-white/40">0 {tAlerts('active')}</p>
               </div>
             </div>
-            <p className="text-sm text-white/60">Get notified when price crosses your target</p>
+            <p className="text-sm text-white/60">{tAlerts('priceAlertDesc')}</p>
           </div>
 
           <div className="glass-card-hover p-4">
@@ -51,11 +52,11 @@ export default function AlertsPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-white">Signal Alerts</h3>
-                <p className="text-xs text-white/40">0 active</p>
+                <h3 className="font-semibold text-white">{tAlerts('signalAlerts')}</h3>
+                <p className="text-xs text-white/40">0 {tAlerts('active')}</p>
               </div>
             </div>
-            <p className="text-sm text-white/60">Get notified when AI generates signals</p>
+            <p className="text-sm text-white/60">{tAlerts('signalAlertDesc')}</p>
           </div>
 
           <div className="glass-card-hover p-4">
@@ -66,20 +67,20 @@ export default function AlertsPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-white">Risk Alerts</h3>
-                <p className="text-xs text-white/40">0 active</p>
+                <h3 className="font-semibold text-white">{tAlerts('riskAlerts')}</h3>
+                <p className="text-xs text-white/40">0 {tAlerts('active')}</p>
               </div>
             </div>
-            <p className="text-sm text-white/60">Get notified of risk events and drawdowns</p>
+            <p className="text-sm text-white/60">{tAlerts('riskAlertDesc')}</p>
           </div>
         </div>
 
         {/* Active Alerts */}
         <div className="glass-card overflow-hidden">
           <div className="p-4 border-b border-white/5 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white">Active Alerts</h2>
+            <h2 className="text-lg font-semibold text-white">{tAlerts('activeAlerts')}</h2>
             <div className="flex items-center gap-2">
-              <span className="badge-info">0 Active</span>
+              <span className="badge-info">0 {tAlerts('active')}</span>
             </div>
           </div>
 
@@ -92,7 +93,7 @@ export default function AlertsPage() {
             </div>
             <p className="text-white/60 text-center mb-2">{tCommon('noData')}</p>
             <p className="text-white/40 text-sm text-center max-w-sm">
-              Create your first alert to stay informed about market movements
+              {tAlerts('createFirstAlert')}
             </p>
           </div>
         </div>
@@ -100,14 +101,14 @@ export default function AlertsPage() {
         {/* Alert History */}
         <div className="glass-card overflow-hidden">
           <div className="p-4 border-b border-white/5">
-            <h2 className="text-lg font-semibold text-white">Alert History</h2>
+            <h2 className="text-lg font-semibold text-white">{tAlerts('alertHistory')}</h2>
           </div>
 
           <div className="p-8 text-center">
             <svg className="w-12 h-12 text-white/20 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className="text-white/40">No alert history yet</p>
+            <p className="text-white/40">{tAlerts('noAlertHistory')}</p>
           </div>
         </div>
       </div>

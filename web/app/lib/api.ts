@@ -315,3 +315,71 @@ export async function fetchReplayTrade(tradePlanId: string) {
 export function getReplayExportUrl(type: 'decision' | 'trade', id: string) {
   return `${API_URL}/api/v1/replay/${type}/${id}/export`;
 }
+
+// Alerts API
+export interface AlertItem {
+  id: string;
+  severity: string;
+  category: string;
+  title: string;
+  message: string;
+  context_json?: Record<string, unknown>;
+  acknowledged: boolean;
+  acknowledged_at?: string;
+  created_at: string;
+}
+
+export interface AlertStats {
+  total: number;
+  unacknowledged: number;
+  by_severity: Record<string, number>;
+  by_category: Record<string, number>;
+}
+
+export async function fetchAlerts(params?: {
+  severity?: string;
+  category?: string;
+  acknowledged?: boolean;
+  limit?: number;
+  offset?: number;
+}): Promise<AlertItem[]> {
+  const searchParams = new URLSearchParams();
+  if (params?.severity) searchParams.set('severity', params.severity);
+  if (params?.category) searchParams.set('category', params.category);
+  if (params?.acknowledged !== undefined) searchParams.set('acknowledged', String(params.acknowledged));
+  if (params?.limit) searchParams.set('limit', String(params.limit));
+  if (params?.offset) searchParams.set('offset', String(params.offset));
+
+  const url = `${API_URL}/api/v1/alerts?${searchParams}`;
+  const res = await fetch(url, { ...fetchOptions, cache: 'no-store' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function fetchAlertStats(): Promise<AlertStats> {
+  const res = await fetch(`${API_URL}/api/v1/alerts/stats`, { ...fetchOptions, cache: 'no-store' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function acknowledgeAlert(id: string) {
+  const res = await fetch(`${API_URL}/api/v1/alerts/${id}/acknowledge`, {
+    ...fetchOptions,
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function acknowledgeAllAlerts(params?: { severity?: string; category?: string }) {
+  const searchParams = new URLSearchParams();
+  if (params?.severity) searchParams.set('severity', params.severity);
+  if (params?.category) searchParams.set('category', params.category);
+
+  const res = await fetch(`${API_URL}/api/v1/alerts/acknowledge-all?${searchParams}`, {
+    ...fetchOptions,
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}

@@ -29,6 +29,9 @@ export function useSSE(options: UseSSEOptions = {}) {
   const [lastEventId, setLastEventId] = useState<string | null>(null)
   const eventSourceRef = useRef<EventSource | null>(null)
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  // 使用 ref 存储 onEvent 以避免重新创建 connect
+  const onEventRef = useRef(onEvent)
+  onEventRef.current = onEvent
 
   const connect = useCallback(() => {
     if (eventSourceRef.current) {
@@ -52,7 +55,7 @@ export function useSSE(options: UseSSEOptions = {}) {
       try {
         const parsed: SSEEvent = JSON.parse(event.data)
         setLastEventId(event.lastEventId || null)
-        onEvent?.(parsed)
+        onEventRef.current?.(parsed)
       } catch {
         // Ignore parse errors
       }
@@ -68,7 +71,7 @@ export function useSSE(options: UseSSEOptions = {}) {
         connect()
       }, reconnectDelay)
     }
-  }, [types, exchangeAccountId, onEvent, reconnectDelay])
+  }, [types, exchangeAccountId, reconnectDelay])
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {

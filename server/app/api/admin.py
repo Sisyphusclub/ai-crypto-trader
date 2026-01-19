@@ -7,11 +7,10 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from app.core.database import get_db
-from app.models import Strategy, Trader, ExchangeAccount, ModelConfig
+from app.models import Strategy, Trader, ExchangeAccount, ModelConfig, User
+from app.api.auth import get_current_user
 
 router = APIRouter(prefix="/admin", tags=["admin"])
-
-MVP_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
 
 class StrategyExport(BaseModel):
@@ -49,14 +48,17 @@ class ConfigImport(BaseModel):
 
 
 @router.get("/export/config", response_model=ConfigExport)
-def export_config(db: Session = Depends(get_db)):
+def export_config(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     """Export system configuration (strategies and traders, no secrets)."""
     strategies = db.query(Strategy).filter(
-        Strategy.user_id == MVP_USER_ID
+        Strategy.user_id == user.id
     ).all()
 
     traders = db.query(Trader).filter(
-        Trader.user_id == MVP_USER_ID
+        Trader.user_id == user.id
     ).all()
 
     strategy_exports = []
@@ -94,14 +96,18 @@ def export_config(db: Session = Depends(get_db)):
 
 
 @router.post("/import/config")
-def import_config(data: ConfigImport, db: Session = Depends(get_db)):
+def import_config(
+    data: ConfigImport,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
     """Import strategies configuration."""
     imported = {"strategies": 0, "skipped": 0}
 
     for s in data.strategies:
         # Check if strategy with same name exists
         existing = db.query(Strategy).filter(
-            Strategy.user_id == MVP_USER_ID,
+            Strategy.user_id == user.id,
             Strategy.name == s.name,
         ).first()
 
@@ -110,7 +116,7 @@ def import_config(data: ConfigImport, db: Session = Depends(get_db)):
             continue
 
         strategy = Strategy(
-            user_id=MVP_USER_ID,
+            user_id=user.id,
             name=s.name,
             enabled=False,  # Always import disabled
             exchange_scope=s.exchange_scope,

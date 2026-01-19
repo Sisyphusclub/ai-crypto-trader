@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.settings import settings
 from app.core.crypto import decrypt_secret
-from app.models import ExchangeAccount, TradePlan, Execution
+from app.models import ExchangeAccount, TradePlan, Execution, User
 from app.api.schemas import (
     TradePreviewRequest,
     TradePreviewResponse,
@@ -21,10 +21,9 @@ from app.api.schemas import (
 )
 from app.adapters import ExchangeAdapter, BinanceAdapter, GateAdapter
 from app.adapters.base import OrderSide
+from app.api.auth import get_current_user
 
 router = APIRouter(prefix="/trade", tags=["trade"])
-
-MVP_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 
 
 def _get_adapter(account: ExchangeAccount) -> ExchangeAdapter:
@@ -50,11 +49,12 @@ def _generate_client_order_id(prefix: str = "ACT") -> str:
 async def preview_trade(
     data: TradePreviewRequest,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """Preview a trade before execution."""
     account = db.query(ExchangeAccount).filter(
         ExchangeAccount.id == data.exchange_account_id,
-        ExchangeAccount.user_id == MVP_USER_ID,
+        ExchangeAccount.user_id == user.id,
     ).first()
     if not account:
         raise HTTPException(status_code=404, detail="Exchange account not found")
@@ -108,11 +108,12 @@ async def preview_trade(
 async def execute_trade(
     data: TradeExecuteRequest,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """Execute a trade plan."""
     account = db.query(ExchangeAccount).filter(
         ExchangeAccount.id == data.exchange_account_id,
-        ExchangeAccount.user_id == MVP_USER_ID,
+        ExchangeAccount.user_id == user.id,
     ).first()
     if not account:
         raise HTTPException(status_code=404, detail="Exchange account not found")
@@ -267,11 +268,12 @@ async def execute_trade(
 async def get_positions(
     exchange_account_id: uuid.UUID,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """Get all open positions for an exchange account."""
     account = db.query(ExchangeAccount).filter(
         ExchangeAccount.id == exchange_account_id,
-        ExchangeAccount.user_id == MVP_USER_ID,
+        ExchangeAccount.user_id == user.id,
     ).first()
     if not account:
         raise HTTPException(status_code=404, detail="Exchange account not found")
@@ -303,11 +305,12 @@ async def get_orders(
     exchange_account_id: uuid.UUID,
     symbol: Optional[str] = None,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """Get open orders for an exchange account."""
     account = db.query(ExchangeAccount).filter(
         ExchangeAccount.id == exchange_account_id,
-        ExchangeAccount.user_id == MVP_USER_ID,
+        ExchangeAccount.user_id == user.id,
     ).first()
     if not account:
         raise HTTPException(status_code=404, detail="Exchange account not found")
@@ -337,10 +340,11 @@ async def get_orders(
 def get_trade_plans(
     limit: int = 50,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """Get recent trade plans."""
     plans = db.query(TradePlan).join(ExchangeAccount).filter(
-        ExchangeAccount.user_id == MVP_USER_ID,
+        ExchangeAccount.user_id == user.id,
     ).order_by(TradePlan.created_at.desc()).limit(limit).all()
 
     return [
@@ -368,11 +372,12 @@ def get_trade_plans(
 def get_trade_plan(
     plan_id: uuid.UUID,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     """Get a specific trade plan by ID."""
     plan = db.query(TradePlan).join(ExchangeAccount).filter(
         TradePlan.id == plan_id,
-        ExchangeAccount.user_id == MVP_USER_ID,
+        ExchangeAccount.user_id == user.id,
     ).first()
 
     if not plan:
